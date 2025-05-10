@@ -1,18 +1,18 @@
 from fastapi import APIRouter, Depends, Body, HTTPException, Request
-from app.auth.helpers import password_authenticated_user, client_id_authenticated_user
-from app.auth.model import SocialLoginRequest
+from app.routes.auth.helpers import password_authenticated_user, client_id_authenticated_user
+from app.routes.auth.model import SocialLoginRequest
 
-from app.auth.api import (
+from app.routes.auth.api import (
     Token,
     create_access_token,
     create_refresh_token,
     validate_refresh_token,
     policy, CustomOAuth2RequestForm,
 )
-from app.auth.model import RefreshToken
-from app.auth.social import provider_map
+from app.routes.auth.model import RefreshToken
+from app.routes.auth.social import provider_map
 from app.config import settings
-from app.user.model import User
+from app.routes.user.model import User
 
 auth_router = APIRouter(tags=["Authentication"], prefix="/auth")
 
@@ -25,13 +25,14 @@ async def login_ep(request: Request, form: CustomOAuth2RequestForm = Depends()) 
         user = await client_id_authenticated_user(form)
     else:
         raise HTTPException(401, "No login info")
-
+    user_roles = await user.user_roles()
+    scopes = [f"{role.name}:{scope}" for role in user_roles for scope in role.scopes]
     if user._using_api_key:
         access_token, at_expires = create_access_token(subject=user.email, client_id=user._api_key.client_id)
     else:
-        access_token, at_expires = create_access_token(subject=user.email)
+        access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_roles)
 
-    refresh_token, rt_expires = create_refresh_token(subject=user.email)
+    refresh_token, rt_expires = create_refresh_token(subject=user.email, scopes=scopes, roles=user_roles)
     return RefreshToken(
         accessToken=access_token,
         accessTokenExpires=at_expires,
@@ -52,9 +53,10 @@ async def social_login_ep(req: SocialLoginRequest) -> RefreshToken:
             )
         user = User(email=email, source=req.provider, referral_code=req.referral_code)
         await user.save()
-
-    access_token, at_expires = create_access_token(subject=user.email)
-    refresh_token, rt_expires = create_refresh_token(subject=user.email)
+    user_roles = await user.user_roles()
+    scopes = [f"{role.name}:{scope}" for role in user_roles for scope in role.scopes]
+    access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_roles)
+    refresh_token, rt_expires = create_refresh_token(subject=user.email, scopes=scopes, roles=user_roles)
     return RefreshToken(
         accessToken=access_token,
         accessTokenExpires=at_expires,

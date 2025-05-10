@@ -3,11 +3,11 @@ from typing import List
 import loguru
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, Form
 from app.email_client import generate_reset_password_email, send_email
-from app.role.model import Role
+from app.routes.role.model import Role
 from app.shared.model import Message
-from app.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User
+from app.routes.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User
 from app.shared.dependencies import current_user, CheckScope, admin_access
-from app.auth.api import (
+from app.routes.auth.api import (
     get_hashed_password, verify_password, password_context,
 )
 

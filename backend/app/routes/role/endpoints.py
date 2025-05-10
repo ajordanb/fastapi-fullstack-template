@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, Depends
 
 from app.shared.dependencies import CheckScope, admin_access
-from app.role.model import Role, RoleBase
+from app.routes.role.model import Role, RoleBase
 from typing import List
 
 from app.shared.model import Message, MessageType

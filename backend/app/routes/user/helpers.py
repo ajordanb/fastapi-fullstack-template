@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from app.user.model import _Users
+from app.routes.user.model import _Users
 
 
 async def validate_user_does_not_exist(email: str):

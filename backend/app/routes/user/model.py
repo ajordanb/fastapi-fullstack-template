@@ -2,8 +2,10 @@ from datetime import datetime, UTC
 from typing import List, Self, Optional
 from beanie import PydanticObjectId, Document
 from fastapi import HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pymongo import IndexModel
+
+from app.routes.role.model import RoleBase, Role
 
 
 class Access(BaseModel):
@@ -12,36 +14,33 @@ class Access(BaseModel):
 
 
 class APIKey(Access):
+    id: PydanticObjectId
     client_id: str
-    hashed_client_secret: str
 
 
 class PSK(Access):
     psk: str
 
+
 class CreateAPIKey(APIKey):
+    hashed_client_secret: str
+
+
+class UpdateAPIKey(APIKey):
     pass
-
-
-class UpdateAPIKey(BaseModel):
-    client_id: str
-    client_secret: Optional[str] = None
-    scopes: Optional[list[str]] = None
-    active: Optional[bool] = None
 
 
 class UserBase(BaseModel):
     """User Base Model"""
     username: Optional[str] = None
     email: str
-    roles: List[str] = []
-    disabled: bool = False
     name: str = ""
     source: str = ""
     email_confirmed: bool = False
     is_active: bool = True
-    api_keys: List[APIKey] = []
     password_reset_code: str | None = None
+    api_keys: List[APIKey] = []
+    roles: List[PydanticObjectId] = []  # This is a list of Role IDs
 
     # These properties are not serialized.
     _using_api_key: str | None = None
@@ -63,6 +62,13 @@ class UserAuth(UserBase):
 class UserOut(UserBase):
     """User out model"""
     id: PydanticObjectId = None
+    roles: List[RoleBase] = []
+
+    @model_validator(mode='after')
+    async def populate_roles(self):
+        if isinstance(self.roles[0], PydanticObjectId) if self.roles else False:
+            self.roles = await Role.find({"_id": {"$in": self.roles}}).to_list()
+        return self
 
 
 class UpdatePassword(BaseModel):
@@ -128,3 +134,8 @@ class User(Document, UserAuth):
         if len(results) >= 2:
             raise HTTPException(status_code=401, detail="Invalid API Key: More than one matching user.")
         return results[0]
+
+    async def user_roles(self) -> List[RoleBase]:
+        """Get all user roles, by their ids"""
+        roles = await Role.find({"_id": {"$in": self.roles}}).to_list()
+        return roles

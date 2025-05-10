@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, UTC
-from typing import Any, Tuple, Union, Optional
+from typing import Any, Tuple, Union, Optional, List, Dict
 from password_strength import PasswordPolicy
 
-from app.auth.model import Token, TokenType
+from app.routes.auth.model import Token, TokenType
 from app.config import settings
 from fastapi import Depends, HTTPException, Form
 from fastapi.security import OAuth2PasswordBearer
@@ -117,31 +117,42 @@ def verify_password(password: str, hashed_pass: str) -> bool:
 
 def create_access_token(
         subject: Union[str, Any], expires_delta: int = None,
-        client_id: str | None = None
+        scopes: Optional[List] = None, roles: Optional[List] = None,
+        client_id: Optional[str] = None
 ) -> Tuple[str, datetime]:
     expires_delta = expires_delta or ACCESS_TOKEN_EXPIRE_MINUTES
-    exp = datetime.now(UTC) + timedelta(minutes=expires_delta)
-    payload = {
-        "sub": subject,
-        "exp": exp,
-        "client_id": client_id
-    }
-    encoded = jwt.encode(payload, JWT_SECRET_KEY, ALGORITHM)
-    return encoded, exp
+    return encoded_token_data(subject=subject,
+                              expires_delta=expires_delta,
+                              client_id=client_id,
+                              roles=roles,
+                              scopes=scopes)
 
 
 def create_refresh_token(
         subject: Union[str, Any], expires_delta: int = None,
-        client_id: str | None = None
+        scopes: Optional[List] = None, roles: Optional[List] = None,
+        client_id: Optional[str] = None
 ) -> Tuple[str, datetime]:
     expires_delta = expires_delta or REFRESH_TOKEN_EXPIRE_MINUTES
+    return encoded_token_data(subject=subject,
+                              expires_delta=expires_delta,
+                              client_id=client_id,
+                              roles=roles,
+                              scopes=scopes)
+
+
+def encoded_token_data(subject: Union[str, Any], expires_delta: int = None,
+                       client_id: Optional[str] = None, scopes: Optional[List] = None, roles: Optional[List] = None) -> \
+        Tuple[str, datetime]:
     exp = datetime.now(UTC) + timedelta(minutes=expires_delta)
     payload = {
         "sub": subject,
         "exp": exp,
-        "client_id": client_id
+        "client_id": client_id,
+        "scopes": scopes,
+        "roles": roles,
     }
-    encoded = jwt.encode(payload, JWT_REFRESH_SECRET_KEY, ALGORITHM)
+    encoded = jwt.encode(payload, JWT_SECRET_KEY, ALGORITHM)
     return encoded, exp
 
 

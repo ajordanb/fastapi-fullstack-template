@@ -4,11 +4,11 @@ import motor.motor_asyncio
 from beanie import Document, init_beanie
 from loguru import logger
 
-from app.auth.api import password_context
+from app.routes.auth.api import password_context
 from app.config import settings
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.user.model import User
+from app.routes.user.model import User
 
 
 class DBManager:
