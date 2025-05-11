@@ -98,8 +98,8 @@ const Login = ({
         setError("Google login failed, please try again.");
       }
     },
-    onError: (error) => setError("OAuth error:" + error),
-    onNonOAuthError: (error) => setError("Non-OAuth error:" + error),
+    onError: () => setError("OAuth error, please try again."),
+    onNonOAuthError: () => setError("Non-OAuth error, please try again."),
     scope: "openid email profile",
   });
 

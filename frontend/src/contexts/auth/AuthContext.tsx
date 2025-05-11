@@ -110,15 +110,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout();
       }
     };
-
     checkAuth();
-  }, [accessToken, refreshToken]);
+
+  }, [accessToken, refreshToken, setCurrentUser, setUserRoles, setUserScopes, setIsAuthenticated]);
 
   const logout = () => {
     setCurrentUser(null);
     setIsAuthenticated(false);
     setAccessToken(null);
     setRefreshToken(null);
+    
   };
 
   const hasRole = (requiredRoles: string | string[]): boolean => {

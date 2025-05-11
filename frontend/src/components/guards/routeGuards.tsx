@@ -21,7 +21,7 @@ export function requireAuth({ context, location }: { context: RouteContext; loca
 
 export function requireRole(requiredRoles: string | string[]) {
   return ({ context, location }: { context: RouteContext; location: any }) => {
-    requireAuth({ context, location }); // First check if authenticated
+    requireAuth({ context, location });
     if (!context.auth.hasRole(requiredRoles)) {
       throw redirect({
         to: '/unauthorized',
