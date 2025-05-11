@@ -1,9 +1,3 @@
-export interface UserRole {
-  name: string;
-  description: string;
-  created_by: string;
-  scopes: string[];
-}
 
 export interface AuthResponse<T = any> {
   data?: T;
@@ -12,24 +6,6 @@ export interface AuthResponse<T = any> {
   status?: number;
 }
 
-export interface ApiKey {
-  id: string;
-  client_id: string;
-  scopes: string[];
-  active: boolean;
-}
-
-export interface User {
-  id: string;
-  username: string;
-  email: string;
-  is_active: boolean;
-  name: string;
-  source: string;
-  email_confirmed: boolean;
-  roles: UserRole[];
-  api_keys?: ApiKey[];
-}
 export interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: string | null;
