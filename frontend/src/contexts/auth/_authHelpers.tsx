@@ -5,24 +5,39 @@ const apiUrl = getAPIURL()
 console.log("API URL: ", apiUrl);
 
 async function _formPostRequest(
-      url: string,
-      body: Record<string, any>
-    ): Promise<unknown> {
-        const formData = new URLSearchParams();
-        for (const [key, value] of Object.entries(body)) {
-            formData.append(key, value.toString());
-        }
-        const headers = {
-            "Content-Type": "application/x-www-form-urlencoded",
-        };
-        const response = await fetch(apiUrl + url, {
-            method: "POST",
-            headers,
-            body: formData,
-        });
-        if (!response.ok) throw new Error("Network response was not ok");
-        return await response.json();
+  url: string,
+  body: Record<string, any>
+): Promise<unknown> {
+  const formData = new URLSearchParams();
+  for (const [key, value] of Object.entries(body)) {
+    formData.append(key, value.toString());
+  }
+  
+  const headers = {
+    "Content-Type": "application/x-www-form-urlencoded",
+  };
+  
+  const response = await fetch(apiUrl + url, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
     }
+    return null;
+  }
+  if (!response.ok) {
+    const errorMessage = data.detail || data.message || data.error || "Network response was not ok";
+    throw new Error(errorMessage);
+  }
+  
+  return data;
+}
 
 async function _jsonPostRequest(
       url: string,

@@ -10,14 +10,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-// Define the form schema
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
@@ -53,12 +52,12 @@ const Login = ({
   googleText = "Log in with Google",
   signupText = "Don't have an account?",
   signupUrl = "#",
-  redirectUrl = "/",
+  redirectUrl = "/users",
 }: LoginProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { basicLogin } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -76,9 +75,9 @@ const Login = ({
     
     try {
       await basicLogin(values.email, values.password);
-      navigate({ to: redirectUrl });
-    } catch (error) {
-      console.error(error);
+      router.navigate({ to: redirectUrl });
+    } catch (error: any) {
+      console.log(error);
       setError(error instanceof Error ? error.message : 'Login failed');
     } finally {
       setIsLoading(false);
