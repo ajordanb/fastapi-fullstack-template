@@ -26,13 +26,14 @@ async def login_ep(request: Request, form: CustomOAuth2RequestForm = Depends()) 
     else:
         raise HTTPException(401, "No login info")
     user_roles = await user.user_roles()
+    user_role_names = [role.name for role in user_roles]
+
     scopes = [f"{role.name}:{scope}" for role in user_roles for scope in role.scopes]
     if user._using_api_key:
         access_token, at_expires = create_access_token(subject=user.email, client_id=user._api_key.client_id)
     else:
-        access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_roles)
-
-    refresh_token, rt_expires = create_refresh_token(subject=user.email, scopes=scopes, roles=user_roles)
+        access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
+    refresh_token, rt_expires = create_refresh_token(subject=user.email, scopes=scopes, roles=user_role_names)
     return RefreshToken(
         accessToken=access_token,
         accessTokenExpires=at_expires,
@@ -54,9 +55,10 @@ async def social_login_ep(req: SocialLoginRequest) -> RefreshToken:
         user = User(email=email, source=req.provider, referral_code=req.referral_code)
         await user.save()
     user_roles = await user.user_roles()
+    user_role_names = [role.name for role in user_roles]
     scopes = [f"{role.name}:{scope}" for role in user_roles for scope in role.scopes]
-    access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_roles)
-    refresh_token, rt_expires = create_refresh_token(subject=user.email, scopes=scopes, roles=user_roles)
+    access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
+    refresh_token, rt_expires = create_refresh_token(subject=user.email, scopes=scopes, roles=user_role_names)
     return RefreshToken(
         accessToken=access_token,
         accessTokenExpires=at_expires,

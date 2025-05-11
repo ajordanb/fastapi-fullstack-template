@@ -1,4 +1,8 @@
+import { getAPIURL } from "@/api/apiUrl";
 import type { TokenDecodedData } from "./model";
+
+const apiUrl = getAPIURL()
+console.log("API URL: ", apiUrl);
 
 async function _formPostRequest(
       url: string,
@@ -11,7 +15,7 @@ async function _formPostRequest(
         const headers = {
             "Content-Type": "application/x-www-form-urlencoded",
         };
-        const response = await fetch("" + url, {
+        const response = await fetch(apiUrl + url, {
             method: "POST",
             headers,
             body: formData,
@@ -53,7 +57,7 @@ async function _postRequest(
         headers["Authorization"] = `Bearer ${token}`;
     } 
 
-    const req_url = params ? "apiUrl" + url + '?' + new URLSearchParams(params) : "apiUrl" + url;
+    const req_url = params ? apiUrl + url + '?' + new URLSearchParams(params) : apiUrl + url;
     return fetch(req_url, {
         method: "POST",
         headers,

@@ -12,6 +12,8 @@ class RoleBase(BaseModel):
     created_by: str
     scopes: List[str] = []
 
+class RoleOut(RoleBase):
+    id: PydanticObjectId
 
 class Role(Document, RoleBase):
     class Settings:

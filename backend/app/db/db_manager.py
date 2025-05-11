@@ -8,6 +8,7 @@ from app.routes.auth.api import password_context
 from app.config import settings
 from motor.motor_asyncio import AsyncIOMotorClient
 
+from app.routes.role.model import Role, RoleOut
 from app.routes.user.model import User
 
 
@@ -43,19 +44,34 @@ async def wipe():
 
 async def create_app_admins():
     admins = settings.default_admin_users
+    await create_admin_role()
+    admin_role = await Role.by_name("admin")
     for admin in admins:
         user = await User.by_email(admin)
         if user is None:
             pw = password_context.hash(settings.user_default_password)
             admin_user = User(
                 email=admin,
-                roles=["admin"],
+                roles=[admin_role.id],
                 source="basic",
                 email_confirmed= True,
-                password=pw
+                password=pw,
             )
             await admin_user.create()
             logger.info(f"Created user {admin}")
+
+async def create_admin_role():
+    role = await Role.by_name("admin")
+    if role is None:
+        admin_role = Role(
+            name="admin",
+            description="Admin role",
+            created_by="system",
+            scopes=["admin"]
+        )
+        await admin_role.create()
+        logger.info(f"Created admin role: {admin_role}")
+
 
 if __name__ == "__main__":
     db = DBManager()
