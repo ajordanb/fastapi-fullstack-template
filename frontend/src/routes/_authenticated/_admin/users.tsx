@@ -7,8 +7,7 @@ export const Route = createFileRoute('/_authenticated/_admin/users')({
 function UsersManagement() {
   return (
     <div>
-      <h1>Users Management</h1>
-      <p>Only admins can see this page</p>
+      <h1>Users Dashboard</h1>
     </div>
   );
 }

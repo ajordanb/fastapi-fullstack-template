@@ -9,9 +9,6 @@ export const Route = createFileRoute('/_authenticated/_admin')({
 function AdminLayout() {
   return (
     <div>
-      <nav className="bg-red-100 p-4">
-        <h2>Admin Section</h2>
-      </nav>
       <Outlet />
     </div>
   );
