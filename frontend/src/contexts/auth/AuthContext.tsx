@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     checkAuth();
-  }, []);
+  }, [accessToken, refreshToken]);
 
   const logout = () => {
     setCurrentUser(null);
@@ -227,6 +227,7 @@ const hasScope = (requiredScopes: string | string[]): boolean => {
         hasRole,
         hasScope,
         authPost,
+        socialLogin
       }}
     >
       {children}

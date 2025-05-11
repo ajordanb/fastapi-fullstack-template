@@ -43,7 +43,7 @@ async function _jsonPostRequest(
       url: string,
       body: Record<string, any>
     ): Promise<unknown> {
-        const response = await fetch("" + url, {
+        const response = await fetch(apiUrl + url, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(body),

@@ -33,6 +33,7 @@ export interface User {
 export interface AuthContextType {
   isAuthenticated: boolean;
   currentUser: string | null;
+  socialLogin: (params: SocialLoginParams) => Promise<void>;
   basicLogin: (email: string, password: string) => Promise<void>;
   logout: () => void;
   hasRole: (requiredRoles: string | string[]) => boolean;

@@ -2,6 +2,8 @@ import { FcGoogle } from "react-icons/fc";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { useGoogleLogin } from "@react-oauth/google";
+
 import {
   Form,
   FormControl,
@@ -10,20 +12,24 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  useRouter,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
   rememberMe: z.boolean(),
 });
-
-type LoginFormValues = z.infer<typeof loginSchema>;
 
 interface LoginProps {
   heading?: string;
@@ -56,33 +62,59 @@ const Login = ({
 }: LoginProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { basicLogin } = useAuth();
-  const router = useRouter();
+  const { basicLogin, socialLogin, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-       email: "",
+      email: "",
       password: "",
       rememberMe: false,
     },
-  })
-
+  });
 
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       await basicLogin(values.email, values.password);
-      router.navigate({ to: redirectUrl });
+      _navigate();
     } catch (error: any) {
       console.log(error);
-      setError(error instanceof Error ? error.message : 'Login failed');
+      setError(error instanceof Error ? error.message : "Login failed");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        await socialLogin({ provider: "google", data: tokenResponse });
+        _navigate();
+      } catch (error) {
+        setError("Google login failed, please try again.");
+      }
+    },
+    onError: (error) => setError("OAuth error:" + error),
+    onNonOAuthError: (error) => setError("Non-OAuth error:" + error),
+    scope: "openid email profile",
+  });
+
+  const _navigate = () => {
+    setTimeout(() => {
+      console.log("6. Navigating now...");
+      navigate({ to: redirectUrl, replace: true });
+    }, 100);
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: redirectUrl });
+    }
+  }, [isAuthenticated, navigate, redirectUrl]);
 
   return (
     <div className="py-32">
@@ -95,14 +127,17 @@ const Login = ({
           </div>
           <div>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="grid gap-4"
+              >
                 {/* Show error message if there is one */}
                 {error && (
                   <div className="text-sm text-red-500 text-center">
                     {error}
                   </div>
                 )}
-                
+
                 <FormField
                   control={form.control}
                   name="email"
@@ -120,7 +155,7 @@ const Login = ({
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="password"
@@ -138,7 +173,7 @@ const Login = ({
                     </FormItem>
                   )}
                 />
-                
+
                 <div className="flex justify-between">
                   <FormField
                     control={form.control}
@@ -167,23 +202,30 @@ const Login = ({
                     Forgot password
                   </a>
                 </div>
-                
-                <Button type="submit" className="mt-2 w-full" disabled={isLoading}>
-                  {isLoading ? 'Logging in...' : loginText}
+
+                <Button
+                  type="submit"
+                  className="mt-2 w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : loginText}
                 </Button>
-                
-                <Button 
-                  variant="outline" 
-                  className="w-full" 
+
+                <Button
+                  variant="outline"
+                  className="w-full"
                   type="button"
                   disabled={isLoading}
+                  onClick={() => {
+                    googleLogin();
+                  }}
                 >
                   <FcGoogle className="mr-2 size-5" />
                   {googleText}
                 </Button>
               </form>
             </Form>
-            
+
             <div className="mx-auto mt-8 flex justify-center gap-1 text-sm text-muted-foreground">
               <p>{signupText}</p>
               <a href={signupUrl} className="font-medium text-primary">
