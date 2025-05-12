@@ -1,4 +1,4 @@
-import asyncio
+
 
 import motor.motor_asyncio
 from beanie import Document, init_beanie

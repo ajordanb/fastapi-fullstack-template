@@ -7,7 +7,7 @@ from app.config import settings
 from fastapi import Depends, HTTPException, Form
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-import jwt
+
 from pydantic import BaseModel, ValidationError
 from starlette import status
 
