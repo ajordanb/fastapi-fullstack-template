@@ -1,8 +1,8 @@
-from datetime import datetime, UTC
+from datetime import datetime
 from typing import List, Self, Optional
 from beanie import PydanticObjectId, Document
 from fastapi import HTTPException
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel
 from pymongo import IndexModel
 
 from app.routes.role.model import RoleBase, Role
@@ -62,13 +62,8 @@ class UserAuth(UserBase):
 class UserOut(UserBase):
     """User out model"""
     id: PydanticObjectId = None
-    roles: List[RoleBase] = []
+    roles: List[RoleBase]
 
-    @model_validator(mode='after')
-    async def populate_roles(self):
-        if isinstance(self.roles[0], PydanticObjectId) if self.roles else False:
-            self.roles = await Role.find({"_id": {"$in": self.roles}}).to_list()
-        return self
 
 
 class UpdatePassword(BaseModel):

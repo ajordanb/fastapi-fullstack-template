@@ -31,8 +31,9 @@ async def current_user(
     return user
 
 
-def admin_access(user: User = Depends(current_user)) -> User:
-    if "admin" in user.roles:
+async def admin_access(user: User = Depends(current_user)) -> User:
+    user_roles = [r.name for r in await user.user_roles()]
+    if "admin" in user_roles:
         return user
     else:
         raise HTTPException(

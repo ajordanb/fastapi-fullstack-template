@@ -10,6 +10,7 @@ from passlib.context import CryptContext
 
 from pydantic import BaseModel, ValidationError
 from starlette import status
+import jwt
 
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.token_expire_minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = settings.refresh_token_expire_minutes

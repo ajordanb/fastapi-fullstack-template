@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body, Query, Form
 from app.email_client import generate_reset_password_email, send_email
 from app.routes.role.model import Role
 from app.shared.model import Message
-from app.routes.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User
+from app.routes.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User, UserOut
 from app.shared.dependencies import current_user, CheckScope, admin_access
 from app.routes.auth.api import (
     get_hashed_password, verify_password, password_context,
@@ -16,16 +16,21 @@ app_admin = Depends(admin_access)
 manage_users = Depends(CheckScope("users.write"))
 
 
-@user_router.post("/all", response_model=List[UserBase], dependencies=[app_admin, manage_users])
-async def get_all_users() -> List[UserBase]:
+@user_router.post("/all", dependencies=[app_admin, manage_users])
+async def get_all_users() -> List[UserOut]:
     """Admin endpoint to get all users"""
+    response: List[UserOut] = []
     users = await User.all_users()
-    return [UserBase(**u.model_dump()) for u in users]
+    for user in users:
+        user_roles = await user.user_roles()
+        response.append(UserOut(**user.model_dump(exclude={'roles'}), roles=user_roles))
+    return response
 
 
 @user_router.post("/register", dependencies=[manage_users, app_admin])
 async def create_user(
-        user_register: UserAuth
+        user_register: UserAuth,
+
 ):
     """Admin endpoint to create a new user"""
     if _ := await User.by_email(user_register.email):
@@ -34,10 +39,10 @@ async def create_user(
             detail="User already exists",
         )
     for role in user_register.roles:
-            if not (_ := await Role.by_name(role)):
+            if not (_ := await Role.by_id(role)):
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Role with name {role} does not exist",
+                    detail=f"Role with id {role} does not exist",
                 )
     hashed_password = get_hashed_password(user_register.password)
     user_register.password = hashed_password
@@ -102,11 +107,11 @@ async def update_user(
 
 @user_router.post("/me/update", dependencies=[app_admin, manage_users])
 async def update_my_user(
-        id: str = Query(...),
+        me: User = Depends(current_user),
         user_update: UserBase = Body(...),
 ) -> UserBase:
     """Update user endpoint"""
-    user = await User.by_id(id)
+    user = await User.by_id(me.id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     await user.update(user_update.model_dump(exclude_unset=True))

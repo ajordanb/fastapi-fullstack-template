@@ -29,7 +29,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import ModeToggle from "../modeToggle"
-import type { User } from "@/contexts/auth/model"
+import type { User } from "@/api/user/model"
 import { useAuth } from "@/hooks/useAuth"
 
 export function NavUser({

@@ -12,6 +12,13 @@ class RoleBase(BaseModel):
     created_by: str
     scopes: List[str] = []
 
+    model_config = {
+        "json_encoders": {
+            PydanticObjectId: str
+        }
+    }
+
+
 class RoleOut(RoleBase):
     id: PydanticObjectId
 
