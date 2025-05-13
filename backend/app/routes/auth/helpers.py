@@ -16,11 +16,11 @@ async def password_authenticated_user(
 ) -> User:
     user = await User.by_email(form.username)
     if user is None:
-        raise HTTPException(status_code=401, detail="Bad email")
+        raise HTTPException(status_code=401, detail="User does not exist")
     if not user.is_active:
         raise HTTPException(status_code=401, detail="Inactive user")
     if not verify_password(form.password, user.password):
-        raise HTTPException(status_code=401, detail="Bad password")
+        raise HTTPException(status_code=401, detail="Incorrect password")
     return user
 
 

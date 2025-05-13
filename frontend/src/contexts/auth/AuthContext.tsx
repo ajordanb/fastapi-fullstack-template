@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, use } from "react";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import {
   _formPostRequest,
@@ -7,6 +7,7 @@ import {
   decodeToken,
 } from "./_authHelpers";
 import type { AuthContextType, AuthPostOptions, AuthResponse, SocialLoginParams, TokenData } from "./model";
+import { set } from "react-hook-form";
 
 
 
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     "currentUser",
     null
   );
-  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [userRoles, setUserRoles] = useLocalStorage<string[]>("roles", []);
   const [userScopes, setUserScopes] = useState<string[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -119,11 +120,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(false);
     setAccessToken(null);
     setRefreshToken(null);
-    
+    setUserRoles([]);
+    setUserScopes([]);
   };
 
   const hasRole = (requiredRoles: string | string[]): boolean => {
-  if (!currentUser) return false;
+    if (!currentUser) return false;
   
   if (Array.isArray(requiredRoles)) {
     return requiredRoles.some(role => userRoles.includes(role));

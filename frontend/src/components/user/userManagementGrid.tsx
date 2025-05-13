@@ -105,7 +105,6 @@ const UserManagementExample: React.FC = () => {
             headerName: "Name",
             sortable: true,
             filter: true,
-            pinned: "left",
           },
           {
             field: "username",

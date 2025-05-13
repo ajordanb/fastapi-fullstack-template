@@ -22,6 +22,8 @@ export function requireAuth({ context, location }: { context: RouteContext; loca
 export function requireRole(requiredRoles: string | string[]) {
   return ({ context, location }: { context: RouteContext; location: any }) => {
     requireAuth({ context, location });
+    console.log("RoleGuard", context.auth.hasRole(requiredRoles));
+
     if (!context.auth.hasRole(requiredRoles)) {
       throw redirect({
         to: '/unauthorized',
