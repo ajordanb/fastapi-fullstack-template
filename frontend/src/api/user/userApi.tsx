@@ -15,13 +15,21 @@ export const userApi = (): UserApi => {
         useQuery({
             queryKey: ["profile"],
             queryFn: async () => {
-                const response = await authPost<User>(`${baseUrl}/me`);
-                return response;
+                return await authPost<User>(`${baseUrl}/me`);
             },
             enabled: isAuthenticated,
         });
 
+    const useAllUsersQuery = (): UseQueryResult<User[], Error> =>
+        useQuery({
+            queryKey: ["allUsers"],
+            queryFn: async () => {
+                return await authPost<User>(`${baseUrl}/all`);
+            },
+            enabled: isAuthenticated,
+        });
     return {
         useUserProfileQuery,
+        useAllUsersQuery
     };
 };

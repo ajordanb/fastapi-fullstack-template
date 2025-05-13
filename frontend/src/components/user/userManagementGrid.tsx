@@ -13,6 +13,7 @@ import {
 
 import type { User } from "@/api/user/model";
 import { ActionButtons, ApiKeysBadge, EmailConfirmationBadge, RolesBadge, SourceBadge, StatusBadge } from "@/components/grid/customCellRenderers";
+import {useApi} from "@/api/api.tsx";
 
 const initialUsers: User[] = [
   {
@@ -77,17 +78,16 @@ const initialUsers: User[] = [
 ];
 
 const UserManagementExample: React.FC = () => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
   const [searchText, setSearchText] = useState("");
   const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
 
-  const fetchUsers = useCallback(async () => {
-    setUsers(initialUsers);
-  }, []);
+  const api = useApi()
+  const { data: users, refetch, isLoading } = api.user.useAllUsersQuery();
+
 
   const handleRefresh = useCallback(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+    refetch();
+  }, [refetch]);
 
   const handleAddUser = useCallback(() => {
     setIsAddUserDialogOpen(true);
@@ -205,18 +205,25 @@ const UserManagementExample: React.FC = () => {
           </div>
         </div>
       </CardHeader>
+      {/* Card header remains the same */}
       <CardContent>
-        <CustomGrid
-          rowData={users}
-          columnDefs={columnDefs}
-          height="600px"
-          searchText={searchText}
-          onSearchChange={setSearchText}
-          enableSearch={true}
-          darkMode={false}
-          pagination={true}
-          paginationPageSize={10}
-        />
+        {isLoading ? (
+          <div className="flex justify-center items-center h-96">
+            <span>Loading users...</span>
+          </div>
+        ) : (
+          <CustomGrid
+            rowData={users}
+            columnDefs={columnDefs}
+            height="600px"
+            searchText={searchText}
+            onSearchChange={setSearchText}
+            enableSearch={true}
+            darkMode={false}
+            pagination={true}
+            paginationPageSize={10}
+          />
+        )}
       </CardContent>
    
     </Card>
