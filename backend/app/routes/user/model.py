@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Self, Optional
+from typing import List, Self, Optional, Tuple
 from beanie import PydanticObjectId, Document
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -134,3 +134,9 @@ class User(Document, UserAuth):
         """Get all user roles, by their ids"""
         roles = await Role.find({"_id": {"$in": self.roles}}).to_list()
         return roles
+
+    async def get_user_scopes_and_roles(self) -> Tuple[List[str], List[str]]:
+        user_roles = await self.user_roles()
+        user_role_names: List = [role.name for role in user_roles]
+        scopes: List = [f"{role.name}:{scope}" for role in user_roles for scope in role.scopes]
+        return scopes, user_role_names

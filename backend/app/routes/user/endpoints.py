@@ -4,13 +4,15 @@ import loguru
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, Form
 
 from app.config import settings
-from app.email_client import generate_reset_password_email, send_email
+from app.email_client import generate_reset_password_email, send_email, generate_magic_link_email
+from app.routes.auth.model import MagicLink
 from app.routes.role.model import Role
 from app.shared.model import Message
 from app.routes.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User, UserOut
 from app.shared.dependencies import current_user, CheckScope, admin_access
 from app.routes.auth.api import (
     get_hashed_password, verify_password, password_context, create_access_token, create_refresh_token,
+    validate_link_token,
 )
 from app.shared.util import encrypt_message, decrypt_message
 
@@ -42,11 +44,11 @@ async def create_user(
             detail="User already exists",
         )
     for role in user_register.roles:
-            if not (_ := await Role.by_id(role)):
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"Role with id {role} does not exist",
-                )
+        if not (_ := await Role.by_id(role)):
+            raise HTTPException(
+                status_code=404,
+                detail=f"Role with id {role} does not exist",
+            )
     hashed_password = get_hashed_password(user_register.password)
     user_register.password = hashed_password
     new_user = User(**user_register.model_dump())
@@ -179,35 +181,52 @@ async def recover_password(email: str) -> Message:
         raise HTTPException(status_code=404, detail="User not found")
     if user.source == "Basic":
         random_text = os.urandom(16).hex()
-        user.password_reset_code = create_refresh_token(subject=user.email)
-        await user.save()
-        email_data = generate_reset_password_email(reset_email=user.email, token=random_text)
+        scopes, user_role_names = await user.get_user_scopes_and_roles()
+        access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
+        email_data = generate_reset_password_email(reset_email=user.email, reset_code=random_text, token=access_token)
         send_email(email=email_data)
+        user.password_reset_code = get_hashed_password(random_text)
+        await user.save()
     else:
         raise HTTPException(status_code=400, detail="User is not authenticated via password.")
     return Message(message="Password recovery email sent")
 
 
-@user_router.post("/reset_password")
+@user_router.post("/send_magic_link")
+async def send_magic_link(magic: MagicLink) -> Message:
+    if not settings.magic_link_enabled:
+        raise HTTPException(status_code=403, detail="Magic link disabled")
+    user = await User.by_email(magic.identifier)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.source == "Basic":
+        scopes, user_role_names = await user.get_user_scopes_and_roles()
+        access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
+        email_data = generate_magic_link_email(user_email=user.email, token=access_token)
+        send_email(email=email_data)
+    else:
+        raise HTTPException(status_code=400, detail="User is not authenticated via password.")
+    return Message(message="Magic link email sent")
+
+
+@user_router.post("/reset_password", dependencies=[])
 async def reset_password(
         email: str = Form(...),
         password_reset_code: str = Form(...),
         new_password: str = Form(...),
+        token = Depends(validate_link_token)
 ) -> Message:
     user = await User.by_email(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     loguru.logger.debug(f"Password reset request for {email} {password_reset_code}")
     if user.source == "Basic":
-        user_decrypted_code = decrypt_message(user.password_reset_code, settings.secret_key)
-        provided_decrypted_code = decrypt_message(password_reset_code, settings.secret_key)
-        if user_decrypted_code == provided_decrypted_code:
-            hashed_password = password_context.hash(new_password)
-            user.password = hashed_password
-            user.password_reset_code = None
-            await user.save()
-            return Message.success("Password reset successfully.")
-        else:
-            raise HTTPException(400, "Unable to reset password: reset code error")
+        if not verify_password(password_reset_code, user.reset_code):
+            raise HTTPException(status_code=401, detail="Incorrect password")
+        hashed_password = get_hashed_password(new_password)
+        user.password = hashed_password
+        user.password_reset_code = None
+        await user.save()
+        return Message.success("Password reset successfully.")
     else:
         raise HTTPException(400, "Unable to reset password: User is not authenticated via password.")

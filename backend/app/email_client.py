@@ -38,7 +38,7 @@ def send_email(email: EmailData) -> None:
     logger.info(f"send email result: {response}")
 
 
-def generate_reset_password_email(reset_email: str, token: str) -> EmailData:
+def generate_reset_password_email(reset_email: str,reset_code: str, token: str) -> EmailData:
     subject = f"Password recovery for user {reset_email}"
     link = f"{settings.app_domain}/password_reset?code={token}"
     html_content = render_email_template(
@@ -47,6 +47,7 @@ def generate_reset_password_email(reset_email: str, token: str) -> EmailData:
             "reset_email": reset_email,
             "valid_minutes": settings.email_reset_token_expire_minutes,
             "reset_link": link,
+            "reset_code":reset_code
         },
     )
     return EmailData(to=reset_email, html_content=html_content, subject=subject)

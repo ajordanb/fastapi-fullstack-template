@@ -6,6 +6,7 @@ from app.routes.auth.api import verify_password, CustomOAuth2RequestForm
 from app.config import settings
 from app.routes.user.model import User, APIKey
 from fastapi import HTTPException
+from typing import List, Tuple
 
 GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 AUDIENCE = settings.google_client_id
@@ -73,3 +74,5 @@ async def validate_google_jwt(id_token):
         raise ValueError("JWT claims error")
     except Exception as e:
         raise ValueError(f"Failed to decode the JWT: {e}")
+
+

@@ -98,7 +98,9 @@ class RefreshTokenReq(BaseModel):
 def validate_refresh_token(req: RefreshTokenReq) -> Token:
     return validate_token(req.refreshToken, JWT_REFRESH_SECRET_KEY)
 
-def validate_magic_link_token(token: str) -> Token:
+def validate_link_token(token: str) -> Token:
+    if token.startswith("Bearer "):
+        token = token[7:]
     return validate_token(token, JWT_SECRET_KEY)
 
 def valid_access_token(token: str = Depends(reuseable_oauth)) -> Token | None:
