@@ -1,18 +1,21 @@
 from fastapi import APIRouter, Depends, Body, HTTPException, Request
+
+from app.email_client import generate_magic_link_email, send_email
 from app.routes.auth.helpers import password_authenticated_user, client_id_authenticated_user
-from app.routes.auth.model import SocialLoginRequest
+from app.routes.auth.model import SocialLoginRequest, MagicLink
 
 from app.routes.auth.api import (
     Token,
     create_access_token,
     create_refresh_token,
     validate_refresh_token,
-    policy, CustomOAuth2RequestForm,
+    policy, CustomOAuth2RequestForm, validate_magic_link_token,
 )
 from app.routes.auth.model import RefreshToken
 from app.routes.auth.social import provider_map
 from app.config import settings
 from app.routes.user.model import User
+from app.shared.model import Message
 
 auth_router = APIRouter(tags=["Authentication"], prefix="/auth")
 
@@ -70,6 +73,36 @@ async def social_login_ep(req: SocialLoginRequest) -> RefreshToken:
 @auth_router.post("/refresh")
 async def refresh(token_data: Token = Depends(validate_refresh_token)) -> RefreshToken:
     """Returns a new access token from a refresh token"""
+    user = await User.by_email(token_data.sub)
+    access_token, at_expires = create_access_token(subject=user.email, client_id=token_data.client_id)
+    refresh_token, rt_expires = create_refresh_token(subject=user.email)
+    return RefreshToken(
+        accessToken=access_token,
+        accessTokenExpires=at_expires,
+        refreshToken=refresh_token,
+        refreshTokenExpires=rt_expires,
+    )
+
+
+@auth_router.post("/send_magic_link")
+async def send_magic_link(magic: MagicLink) -> Message:
+    if not settings.magic_link_enabled:
+        raise HTTPException(status_code=403, detail="Magic link disabled")
+    user = await User.by_email(magic.identifier)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_roles = await user.user_roles()
+    user_role_names = [role.name for role in user_roles]
+    scopes = [f"{role.name}:{scope}" for role in user_roles for scope in role.scopes]
+    access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
+    email_data = generate_magic_link_email(user_email=user.email, token=access_token)
+    send_email(email=email_data)
+    return Message(message="Magic link email sent")
+
+
+
+@auth_router.post("/validate_magic_link", status_code=204)
+async def validate_magic_link(token_data=Depends(validate_magic_link_token)) -> RefreshToken:
     user = await User.by_email(token_data.sub)
     access_token, at_expires = create_access_token(subject=user.email, client_id=token_data.client_id)
     refresh_token, rt_expires = create_refresh_token(subject=user.email)

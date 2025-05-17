@@ -45,10 +45,22 @@ def generate_reset_password_email(reset_email: str, token: str) -> EmailData:
         template_name="reset_password.html",
         context={
             "reset_email": reset_email,
-            "valid_hours": 1,
+            "valid_minutes": settings.email_reset_token_expire_minutes,
             "reset_link": link,
         },
     )
     return EmailData(to=reset_email, html_content=html_content, subject=subject)
 
 
+def generate_magic_link_email(user_email: str, token: str) -> EmailData:
+    subject = f"Magic link for user {user_email}"
+    link = f"{settings.app_domain}/magic_link?code={token}"
+    html_content = render_email_template(
+        template_name="magic_link.html",
+        context={
+            "user_email": user_email,
+            "valid_minutes": settings.email_reset_token_expire_minutes,
+            "magic_link": link,
+        }
+    )
+    return EmailData(to=user_email, html_content=html_content, subject=subject)

@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog.tsx";
 import {Badge} from "@/components/ui/badge.tsx";
 import type {ICellRendererParams} from "ag-grid-community";
-import {CheckCircle, Edit, Key, MoreHorizontal, Trash2, UserPlus, XCircle} from "lucide-react";
+import {CheckCircle, Edit, Key, MoreHorizontal, Trash2, XCircle, RotateCcw} from "lucide-react";
 import type {ApiKey, User, UserRole} from "@/api/user/model.tsx";
 import React, {useState} from "react";
 import {Button} from "../ui/button.tsx";
@@ -28,7 +28,6 @@ import AddUserDialog from "@/components/user/addUserDialog.tsx";
 
 export const StatusBadge: React.FC<ICellRendererParams> = (params) => {
     const isActive = params.value;
-
     return isActive ? (
         <Badge
             variant="secondary"
@@ -47,6 +46,7 @@ export const StatusBadge: React.FC<ICellRendererParams> = (params) => {
         </Badge>
     );
 };
+
 
 export const EmailConfirmationBadge: React.FC<ICellRendererParams> = (params) => {
     const isConfirmed = params.value;
@@ -162,8 +162,11 @@ export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
         setIsDeleteAlertOpen(true);
     };
 
+    const handleResetPassword =() => {
+        console.log(`Reset password: ${user.email}`);
+    }
+
     const confirmDelete = () => {
-        // Implementation: Call API to delete user
         console.log(`Delete user: ${user.username}`);
         setIsDeleteAlertOpen(false);
     };
@@ -225,6 +228,13 @@ export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
                         Manage API keys
                     </DropdownMenuItem>
                     <DropdownMenuSeparator/>
+                    <DropdownMenuItem
+                        onClick={handleResetPassword}
+                    >
+                        <RotateCcw className="h-4 w-4 mr-2"/>
+                        Reset Password
+                    </DropdownMenuItem>
+
                     <DropdownMenuItem
                         onClick={handleDelete}
                         className="text-red-600 focus:text-red-600"

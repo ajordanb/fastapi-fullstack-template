@@ -102,6 +102,7 @@ const UserManagementExample: React.FC = () => {
                         filter: false,
                         cellRenderer: ApiKeysBadge,
                     },
+
                 ],
             },
             {
@@ -112,6 +113,7 @@ const UserManagementExample: React.FC = () => {
                 cellRenderer: ActionButtons,
                 pinned: "right",
             },
+
         ],
         []
     );

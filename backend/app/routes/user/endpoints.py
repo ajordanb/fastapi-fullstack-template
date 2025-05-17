@@ -169,7 +169,7 @@ async def delete_api_key(
     return Message.success(message="API key deleted.")
 
 
-@user_router.post("/email_password_reset_link")
+@user_router.post("/email_password_reset_link", dependencies=[app_admin, manage_users])
 async def recover_password(email: str) -> Message:
     user = await User.by_email(email)
     if not user:

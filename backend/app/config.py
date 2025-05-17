@@ -19,7 +19,10 @@ class Settings(BaseSettings):
     """db_name to be used to create the app mongo database"""
     db_conn_str: str = "mongodb://localhost:27017/"
     """mongo connection string"""
-
+    allow_new_users: bool = True
+    """Allow new users or not"""
+    magic_link_enabled: bool = True
+    """Magic Link emails enabled"""
     emails_enabled: bool = True
     """If enabled, emails will be sent"""
     emails_from_name: str = ""

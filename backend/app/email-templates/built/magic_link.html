@@ -20,7 +20,7 @@
             overflow: hidden;
         }
         .header {
-            background-color: #007bff;
+            background-color: #6200ea;
             color: white;
             padding: 20px;
             text-align: center;
@@ -33,25 +33,36 @@
             padding: 20px;
         }
         .content h2 {
-            color: #007bff;
+            color: #6200ea;
             margin-bottom: 10px;
         }
         .content p {
             font-size: 16px;
             line-height: 1.6;
         }
-        .reset-link {
+        .magic-link {
             display: block;
-            background-color: #28a745;
+            background-color: #6200ea;
             color: white;
             text-decoration: none;
-            padding: 10px;
+            padding: 12px;
             text-align: center;
             border-radius: 5px;
-            margin: 20px 0;
+            margin: 25px 0;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
         }
-        .reset-link:hover {
-            background-color: #218838;
+        .magic-link:hover {
+            background-color: #5000d3;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .note {
+            background-color: #f8f9fa;
+            border-left: 4px solid #6200ea;
+            padding: 10px 15px;
+            margin: 20px 0;
+            font-size: 14px;
         }
         .footer {
             background-color: #f4f4f4;
@@ -65,18 +76,21 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Password Reset Request</h1>
+            <h1>Login Magic Link</h1>
         </div>
         <div class="content">
-            <h2>Hello,</h2>
-            <p>We received a request to reset the password for the account associated with <strong>{{ reset_email }}</strong>.</p>
-            <p>Click the button below to reset your password:</p>
-            <a class="reset-link" href="{{ reset_link }}">Reset Password</a>
-            <p>If you didn't request a password reset, you can safely ignore this email.</p>
-            <p>This password will expire in {{ valid_minutes }} minutes</p>
+            <h2>Hello {{ user_email }},</h2>
+            <p>You requested a magic link to sign in to your account with <strong>{{ user_email }}</strong>.</p>
+            <p>Click the button below to sign in instantly (no password needed):</p>
+            <a class="magic-link" href="{{ magic_link }}">Sign In Securely</a>
+            <div class="note">
+                <p>This link will expire in {{ valid_minutes }} minutes and can only be used once.</p>
+                <p>If you didn't request this link, you can safely ignore this email.</p>
+            </div>
         </div>
         <div class="footer">
-            <p>If you have any issues, please contact our support team.</p>
+            <p>For security reasons, this login link was sent to the email address associated with your account.</p>
+            <p>If you have any questions, please contact our support team.</p>
         </div>
     </div>
 </body>

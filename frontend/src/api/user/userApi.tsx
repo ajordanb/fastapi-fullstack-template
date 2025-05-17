@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import {
+    useMutation,
     useQuery,
     type UseQueryResult,
 } from "@tanstack/react-query";
@@ -28,8 +29,23 @@ export const userApi = (): UserApi => {
             },
             enabled: isAuthenticated,
         });
+
+    const sendUserPasswordReset  = useMutation<unknown, Error, string>({
+        mutationFn: async (email) => authPost(
+            "/email_password_reset_link",
+            null,
+            {params: {email: email}}
+        ),
+        onSuccess: () => {
+            console.log('Success!')
+        },
+        onError: (error) => {
+            console.error(error);
+        }
+    });
     return {
         useUserProfileQuery,
-        useAllUsersQuery
+        useAllUsersQuery,
+        sendUserPasswordReset
     };
 };
