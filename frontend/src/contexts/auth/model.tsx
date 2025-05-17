@@ -8,6 +8,7 @@ export interface AuthResponse<T = any> {
 
 export interface AuthContextType {
   isAuthenticated: boolean;
+  isLoggingIn: boolean;
   currentUser: string | null;
   socialLogin: (params: SocialLoginParams) => Promise<void>;
   basicLogin: (email: string, password: string) => Promise<void>;

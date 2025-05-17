@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, use } from "react";
+import { createContext, useState, useEffect } from "react";
 import { useLocalStorage } from "@uidotdev/usehooks";
 import {
   _formPostRequest,
@@ -7,7 +7,6 @@ import {
   decodeToken,
 } from "./_authHelpers";
 import type { AuthContextType, AuthPostOptions, AuthResponse, SocialLoginParams, TokenData } from "./model";
-import { set } from "react-hook-form";
 
 
 
@@ -224,6 +223,7 @@ const hasScope = (requiredScopes: string | string[]): boolean => {
     <AuthContext.Provider
       value={{
         isAuthenticated,
+        isLoggingIn,
         currentUser,
         basicLogin,
         logout,
