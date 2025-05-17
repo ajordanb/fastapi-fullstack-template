@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     token_expire_minutes: int = 30
     """The token expiry in minutes, defaults to 30 minutes"""
     secret_key: str = "change_me"
-    """The key used to hash passwords"""
+    """The key used to hash passwords and psks"""
     authjwt_refresh_key: str = "change_me"
     """The refresh token key"""
     admin_users: str = "ajordanbojanic@gmail.com"

@@ -2,14 +2,17 @@ import os
 from typing import List
 import loguru
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, Form
+
+from app.config import settings
 from app.email_client import generate_reset_password_email, send_email
 from app.routes.role.model import Role
 from app.shared.model import Message
 from app.routes.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User, UserOut
 from app.shared.dependencies import current_user, CheckScope, admin_access
 from app.routes.auth.api import (
-    get_hashed_password, verify_password, password_context,
+    get_hashed_password, verify_password, password_context, create_access_token, create_refresh_token,
 )
+from app.shared.util import encrypt_message, decrypt_message
 
 user_router = APIRouter(tags=["User Management"], prefix="/user")
 app_admin = Depends(admin_access)
@@ -175,8 +178,8 @@ async def recover_password(email: str) -> Message:
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.source == "Basic":
-        random_text = os.urandom(48).hex()
-        user.password_reset_code = random_text
+        random_text = os.urandom(16).hex()
+        user.password_reset_code = create_refresh_token(subject=user.email)
         await user.save()
         email_data = generate_reset_password_email(reset_email=user.email, token=random_text)
         send_email(email=email_data)
@@ -196,11 +199,12 @@ async def reset_password(
         raise HTTPException(status_code=404, detail="User not found")
     loguru.logger.debug(f"Password reset request for {email} {password_reset_code}")
     if user.source == "Basic":
-        if user.password_reset_code == password_reset_code:
+        user_decrypted_code = decrypt_message(user.password_reset_code, settings.secret_key)
+        provided_decrypted_code = decrypt_message(password_reset_code, settings.secret_key)
+        if user_decrypted_code == provided_decrypted_code:
             hashed_password = password_context.hash(new_password)
             user.password = hashed_password
-            random_text = os.urandom(48).hex()
-            user.password_reset_code = random_text
+            user.password_reset_code = None
             await user.save()
             return Message.success("Password reset successfully.")
         else:
