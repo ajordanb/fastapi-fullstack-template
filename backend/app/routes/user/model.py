@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from pymongo import IndexModel
 
+from app.routes.auth.model import MagicLink
 from app.routes.role.model import RoleBase, Role
 
 
@@ -47,6 +48,8 @@ class UserBase(BaseModel):
     """True when the current user has been authenticated via an API key instead of OAuth2. Not stored in DB."""
     _api_key: APIKey | None = None
     """If using_api_key is True, a valid reference to the API key that the user authenticated with."""
+
+    magic_links: List[MagicLink] = []
 
     def get_api_key(self, client_id: str) -> APIKey:
         api_key = [x for x in self.api_keys if x.client_id == client_id]

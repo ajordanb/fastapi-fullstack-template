@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     """Magic Link emails enabled"""
     emails_enabled: bool = True
     """If enabled, emails will be sent"""
-    emails_from_name: str = ""
+    emails_from_name: str = "Support"
     """The from email name"""
     emails_from_email: str = ""
     """The from email"""

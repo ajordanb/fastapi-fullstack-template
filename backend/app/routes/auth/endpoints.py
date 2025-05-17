@@ -76,7 +76,7 @@ async def refresh(token_data: Token = Depends(validate_refresh_token)) -> Refres
     )
 
 
-@auth_router.post("/validate_magic_link", status_code=204)
+@auth_router.post("/validate_magic_link")
 async def validate_magic_link(token_data=Depends(validate_link_token)) -> RefreshToken:
     user = await User.by_email(token_data.sub)
     access_token, at_expires = create_access_token(subject=user.email, client_id=token_data.client_id)

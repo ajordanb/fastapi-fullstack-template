@@ -7,14 +7,14 @@ from app.config import settings
 from app.email_client import generate_reset_password_email, send_email, generate_magic_link_email
 from app.routes.auth.model import MagicLink
 from app.routes.role.model import Role
+from app.routes.user.helpers import generate_magic_link
 from app.shared.model import Message
 from app.routes.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User, UserOut
 from app.shared.dependencies import current_user, CheckScope, admin_access
 from app.routes.auth.api import (
-    get_hashed_password, verify_password, password_context, create_access_token, create_refresh_token,
+    get_hashed_password, verify_password, password_context, create_access_token,
     validate_link_token,
 )
-from app.shared.util import encrypt_message, decrypt_message
 
 user_router = APIRouter(tags=["User Management"], prefix="/user")
 app_admin = Depends(admin_access)
@@ -179,7 +179,7 @@ async def recover_password(email: str) -> Message:
     user = await User.by_email(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if user.source == "Basic":
+    if user.source.lower() == "basic":
         random_text = os.urandom(16).hex()
         scopes, user_role_names = await user.get_user_scopes_and_roles()
         access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
@@ -193,17 +193,20 @@ async def recover_password(email: str) -> Message:
 
 
 @user_router.post("/send_magic_link")
-async def send_magic_link(magic: MagicLink) -> Message:
+async def send_magic_link(email: str) -> Message:
     if not settings.magic_link_enabled:
         raise HTTPException(status_code=403, detail="Magic link disabled")
-    user = await User.by_email(magic.identifier)
+    user = await User.by_email(email)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    if user.source == "Basic":
+    if user.source.lower() == "basic":
+        magic = generate_magic_link(email=user.email)
         scopes, user_role_names = await user.get_user_scopes_and_roles()
         access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
         email_data = generate_magic_link_email(user_email=user.email, token=access_token)
         send_email(email=email_data)
+        user.magic_links.append(magic)
+        await user.save()
     else:
         raise HTTPException(status_code=400, detail="User is not authenticated via password.")
     return Message(message="Magic link email sent")
