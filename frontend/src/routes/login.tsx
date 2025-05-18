@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/form";
 import {
   createFileRoute,
-  useRouter,
   useNavigate,
 } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,7 +57,7 @@ const Login = ({
   googleText = "Log in with Google",
   signupText = "Don't have an account?",
   signupUrl = "#",
-  redirectUrl = "/users",
+  redirectUrl = "/admin/users",
 }: LoginProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

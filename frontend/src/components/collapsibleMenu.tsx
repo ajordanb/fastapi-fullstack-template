@@ -1,6 +1,5 @@
-"use client"
-
 import { ChevronRight, type LucideIcon } from "lucide-react"
+import { Link } from "@tanstack/react-router"
 import {
   Collapsible,
   CollapsibleContent,
@@ -17,24 +16,28 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[]
-}) {
+interface SubMenuItem {
+  title: string
+  url: string
+}
+
+interface MenuItem {
+  title: string
+  url: string
+  icon?: LucideIcon
+  isActive?: boolean
+  items?: SubMenuItem[]
+}
+
+interface CollapsibleMenuProps {
+  items: MenuItem[];
+  label: string
+}
+
+export function CollapsibleMenu({ items, label }: CollapsibleMenuProps) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
-      
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <Collapsible
@@ -45,7 +48,7 @@ export function NavMain({
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
+                <SidebarMenuButton>
                   {item.icon && <item.icon />}
                   <span>{item.title}</span>
                   <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -56,9 +59,9 @@ export function NavMain({
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
                       <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
+                        <Link to={subItem.url}>
                           <span>{subItem.title}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}
@@ -72,4 +75,4 @@ export function NavMain({
   )
 }
 
-export default NavMain;
+export default CollapsibleMenu;

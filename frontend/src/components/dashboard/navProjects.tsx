@@ -1,5 +1,3 @@
-"use client"
-
 import {
   Folder,
   Forward,
@@ -25,7 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export function NavProjects({
+export function NavAdmin({
   projects,
 }: {
   projects: {
@@ -88,4 +86,4 @@ export function NavProjects({
   )
 }
 
-export default NavProjects
+export default NavAdmin

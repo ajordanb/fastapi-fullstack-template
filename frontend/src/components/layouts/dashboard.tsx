@@ -1,4 +1,3 @@
-// components/layouts/dashboard.tsx
 import { AppSidebar } from "@/components/sidebar"
 import {
   Breadcrumb,
