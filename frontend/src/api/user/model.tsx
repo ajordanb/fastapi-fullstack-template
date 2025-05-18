@@ -3,7 +3,8 @@ import {type UseMutationResult, type UseQueryResult} from "@tanstack/react-query
 export interface UserApi {
     useUserProfileQuery: () => UseQueryResult<User, Error>;
     useAllUsersQuery: () => UseQueryResult<User[], Error>;
-     sendUserPasswordReset: UseMutationResult<unknown, Error, string>;
+    sendUserPasswordReset: UseMutationResult<unknown, Error, string>;
+    sendMagicLink: UseMutationResult<unknown, Error, string>;
 }
 
 export interface UserRole {

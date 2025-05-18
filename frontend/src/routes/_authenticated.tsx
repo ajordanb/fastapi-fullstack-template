@@ -13,7 +13,7 @@ function AuthenticatedLayout() {
   
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate({ to: '/login' });
+      navigate({ to: "/login" });
     }
   }, [isAuthenticated, navigate]);
   

@@ -32,7 +32,21 @@ export const userApi = (): UserApi => {
 
     const sendUserPasswordReset  = useMutation<unknown, Error, string>({
         mutationFn: async (email) => authPost(
-            "/email_password_reset_link",
+            `${baseUrl}/email_password_reset_link`,
+            null,
+            {params: {email: email}}
+        ),
+        onSuccess: () => {
+            console.log('Success!')
+        },
+        onError: (error) => {
+            console.error(error);
+        }
+    });
+
+    const sendMagicLink  = useMutation<unknown, Error, string>({
+        mutationFn: async (email) => authPost(
+            `${baseUrl}/send_magic_link`,
             null,
             {params: {email: email}}
         ),
@@ -46,6 +60,7 @@ export const userApi = (): UserApi => {
     return {
         useUserProfileQuery,
         useAllUsersQuery,
-        sendUserPasswordReset
+        sendUserPasswordReset,
+        sendMagicLink
     };
 };
