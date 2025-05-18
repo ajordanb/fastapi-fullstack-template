@@ -13,7 +13,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import {
-    createFileRoute,
+    createFileRoute, Link,
     useNavigate,
 } from "@tanstack/react-router";
 import {useAuth} from "@/hooks/useAuth";
@@ -204,9 +204,9 @@ const Login = ({
                                 </FormItem>
                             )}
                         />
-                        <a href="#" className="text-sm text-primary hover:underline">
+                        <Link to={'/requestNewPassword'} className="text-sm text-primary hover:underline">
                             Forgot password
-                        </a>
+                        </Link>
                     </div>
 
                     <Button

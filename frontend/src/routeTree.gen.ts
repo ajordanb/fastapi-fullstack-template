@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as UnauthorizedImport } from './routes/unauthorized'
+import { Route as RequestNewPasswordImport } from './routes/requestNewPassword'
 import { Route as RequestMagicLinkImport } from './routes/requestMagicLink'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
@@ -27,6 +28,12 @@ import { Route as AuthenticatedAdminAdminUsersImport } from './routes/_authentic
 const UnauthorizedRoute = UnauthorizedImport.update({
   id: '/unauthorized',
   path: '/unauthorized',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const RequestNewPasswordRoute = RequestNewPasswordImport.update({
+  id: '/requestNewPassword',
+  path: '/requestNewPassword',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -113,6 +120,13 @@ declare module '@tanstack/react-router' {
       path: '/requestMagicLink'
       fullPath: '/requestMagicLink'
       preLoaderRoute: typeof RequestMagicLinkImport
+      parentRoute: typeof rootRoute
+    }
+    '/requestNewPassword': {
+      id: '/requestNewPassword'
+      path: '/requestNewPassword'
+      fullPath: '/requestNewPassword'
+      preLoaderRoute: typeof RequestNewPasswordImport
       parentRoute: typeof rootRoute
     }
     '/unauthorized': {
@@ -203,6 +217,7 @@ export interface FileRoutesByFullPath {
   '': typeof AuthenticatedManagerRouteWithChildren
   '/login': typeof LoginRoute
   '/requestMagicLink': typeof RequestMagicLinkRoute
+  '/requestNewPassword': typeof RequestNewPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/reports': typeof AuthenticatedManagerReportsRoute
@@ -214,6 +229,7 @@ export interface FileRoutesByTo {
   '': typeof AuthenticatedManagerRouteWithChildren
   '/login': typeof LoginRoute
   '/requestMagicLink': typeof RequestMagicLinkRoute
+  '/requestNewPassword': typeof RequestNewPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/reports': typeof AuthenticatedManagerReportsRoute
@@ -226,6 +242,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/requestMagicLink': typeof RequestMagicLinkRoute
+  '/requestNewPassword': typeof RequestNewPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/_manager': typeof AuthenticatedManagerRouteWithChildren
@@ -241,6 +258,7 @@ export interface FileRouteTypes {
     | ''
     | '/login'
     | '/requestMagicLink'
+    | '/requestNewPassword'
     | '/unauthorized'
     | '/demo/tanstack-query'
     | '/reports'
@@ -251,6 +269,7 @@ export interface FileRouteTypes {
     | ''
     | '/login'
     | '/requestMagicLink'
+    | '/requestNewPassword'
     | '/unauthorized'
     | '/demo/tanstack-query'
     | '/reports'
@@ -261,6 +280,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/requestMagicLink'
+    | '/requestNewPassword'
     | '/unauthorized'
     | '/_authenticated/_admin'
     | '/_authenticated/_manager'
@@ -275,6 +295,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   RequestMagicLinkRoute: typeof RequestMagicLinkRoute
+  RequestNewPasswordRoute: typeof RequestNewPasswordRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
 }
@@ -284,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   RequestMagicLinkRoute: RequestMagicLinkRoute,
+  RequestNewPasswordRoute: RequestNewPasswordRoute,
   UnauthorizedRoute: UnauthorizedRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
 }
@@ -302,6 +324,7 @@ export const routeTree = rootRoute
         "/_authenticated",
         "/login",
         "/requestMagicLink",
+        "/requestNewPassword",
         "/unauthorized",
         "/demo/tanstack-query"
       ]
@@ -321,6 +344,9 @@ export const routeTree = rootRoute
     },
     "/requestMagicLink": {
       "filePath": "requestMagicLink.tsx"
+    },
+    "/requestNewPassword": {
+      "filePath": "requestNewPassword.tsx"
     },
     "/unauthorized": {
       "filePath": "unauthorized.tsx"
