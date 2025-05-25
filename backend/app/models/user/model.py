@@ -120,7 +120,9 @@ class User(Document, UserAuth):
     @classmethod
     async def by_id(cls, _id: PydanticObjectId | str) -> Self:
         """Get a user by id"""
-        return await cls.find_one({"id": _id})
+        if isinstance(_id, PydanticObjectId):
+            _id = str(_id)
+        return await cls.get(_id)
 
     @classmethod
     async def by_client_id(cls, client_id: str, raise_on_zero=True) -> Self:
@@ -132,6 +134,13 @@ class User(Document, UserAuth):
         if len(results) >= 2:
             raise HTTPException(status_code=401, detail="Invalid API Key: More than one matching user.")
         return results[0]
+
+    @classmethod
+    async def has_role(cls, role_id: PydanticObjectId | str ) -> List[Self]:
+        if isinstance(role_id, str):
+            role_id = PydanticObjectId(role_id)
+        results = await cls.find({"roles": role_id}).to_list()
+        return results
 
     async def user_roles(self) -> List[RoleBase]:
         """Get all user roles, by their ids"""

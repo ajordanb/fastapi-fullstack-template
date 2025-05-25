@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.db.db_manager import DBManager, create_app_admins
 from app.api.v1.auth.endpoints import auth_router
 from app.api.v1.user.endpoints import user_router
+from app.api.v1.role.endpoints import role_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,3 +46,4 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(role_router)

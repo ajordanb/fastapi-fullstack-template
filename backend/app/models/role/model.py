@@ -2,14 +2,14 @@ from datetime import datetime
 from typing import List, Self
 
 from beanie import PydanticObjectId, Document
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pymongo import IndexModel
 
 
 class RoleBase(BaseModel):
     name: str
     description: str = None
-    created_by: str
+    created_by: str = None
     scopes: List[str] = []
 
     model_config = {
@@ -20,7 +20,14 @@ class RoleBase(BaseModel):
 
 
 class RoleOut(RoleBase):
-    id: PydanticObjectId
+    id: PydanticObjectId = Field(alias="_id")
+
+    model_config = {
+        "populate_by_name": True,
+        "json_encoders": {
+            PydanticObjectId: str
+        }
+    }
 
 class Role(Document, RoleBase):
     class Settings:
@@ -42,7 +49,9 @@ class Role(Document, RoleBase):
     @classmethod
     async def by_id(cls, _id: PydanticObjectId | str) -> Self:
         """Get a role by id"""
-        return await cls.find_one({"id": _id})
+        if isinstance(_id, PydanticObjectId):
+            _id = str(_id)
+        return await cls.get(_id)
 
     @classmethod
     async def by_name(cls, _name: str) -> Self:
