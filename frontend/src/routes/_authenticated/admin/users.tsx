@@ -1,7 +1,7 @@
-import UserManagementGrid from '@/components/user/userManagementGrid';
+import UserManagementGrid from '@/components/user/userManagementGrid.tsx';
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/_authenticated/_admin/admin/users')({
+export const Route = createFileRoute('/_authenticated/admin/users')({
   component: UsersManagement,
 });
 

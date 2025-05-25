@@ -5,8 +5,8 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from pymongo import IndexModel
 
-from app.routes.auth.model import MagicLink
-from app.routes.role.model import RoleBase, Role
+from app.models.auth.model import MagicLink
+from app.models.role.model import RoleBase, Role
 
 
 class Access(BaseModel):

@@ -1,20 +1,19 @@
 import os
 from typing import List
 import loguru
-from fastapi import APIRouter, Depends, HTTPException, Body, Query, Form
+from fastapi import APIRouter, Depends, HTTPException, Body, Form
 
-from app.config import settings
+from app.core.config import settings
 from app.email_client import generate_reset_password_email, send_email, generate_magic_link_email
-from app.routes.auth.model import MagicLink
-from app.routes.role.model import Role
-from app.routes.user.helpers import generate_magic_link
-from app.shared.model import Message
-from app.routes.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User, UserOut
-from app.shared.dependencies import current_user, CheckScope, admin_access
-from app.routes.auth.api import (
+from app.models.role.model import Role
+from app.api.v1.user.helpers import generate_magic_link
+from app.models.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User, UserOut
+from app.core.security.api import (
     get_hashed_password, verify_password, password_context, create_access_token,
     validate_link_token,
 )
+from app.models.util.model import Message
+from app.utills.dependencies import current_user, admin_access, CheckScope
 
 user_router = APIRouter(tags=["User Management"], prefix="/user")
 app_admin = Depends(admin_access)

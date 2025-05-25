@@ -3,7 +3,7 @@ import {EmailActionForm, type EmailFormValues} from "@/components/foms/emailForm
 import {useApi} from "@/api/api.tsx";
 
 
-export const PasswordResetRoute = createFileRoute('/requestNewPassword')({
+export const Route = createFileRoute('/requestNewPassword')({
     component: PasswordResetComponent,
 })
 

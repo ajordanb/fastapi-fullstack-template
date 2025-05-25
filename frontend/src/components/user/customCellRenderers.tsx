@@ -20,11 +20,19 @@ import {Badge} from "@/components/ui/badge.tsx";
 import type {ICellRendererParams} from "ag-grid-community";
 import {CheckCircle, Edit, Key, MoreHorizontal, Trash2, XCircle, RotateCcw} from "lucide-react";
 import type {ApiKey, User, UserRole} from "@/api/user/model.tsx";
-import React, {useState} from "react";
+import React, {type ReactNode, useState} from "react";
 import {Button} from "../ui/button.tsx";
 import CustomModal from "@/components/customModal.tsx";
 import AddUserDialog from "@/components/user/addUserDialog.tsx";
+import {useApi} from "@/api/api.tsx";
+import {Spin} from "antd";
 
+
+interface ActionProps {
+    handleAction:(value: any) => Promise<void> | void;
+    children:ReactNode;
+    successMessage: string;
+}
 
 export const StatusBadge: React.FC<ICellRendererParams> = (params) => {
     const isActive = params.value;
@@ -46,7 +54,6 @@ export const StatusBadge: React.FC<ICellRendererParams> = (params) => {
         </Badge>
     );
 };
-
 
 export const EmailConfirmationBadge: React.FC<ICellRendererParams> = (params) => {
     const isConfirmed = params.value;
@@ -111,7 +118,6 @@ export const SourceBadge: React.FC<ICellRendererParams> = (params) => {
     }
 };
 
-
 export const RolesBadge: React.FC<ICellRendererParams> = (params) => {
     const roles = params.value as UserRole[];
 
@@ -154,16 +160,70 @@ export const ApiKeysBadge: React.FC<ICellRendererParams> = (params) => {
     );
 };
 
+export const ActionMenuItem: React.FC<ActionProps> = ({handleAction, children, successMessage}) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [isError, setError] = useState<string | null>(null);
+    const [feedback, setFeedback] = useState<string | null>(null);
+
+    const handleSubmit = async (e:React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setIsLoading(true);
+        setError(null);
+        setFeedback(null);
+
+        try {
+            await handleAction(e);
+            setFeedback(successMessage);
+            setTimeout(() => {
+                setFeedback(null);
+            }, 3000);
+        } catch (error: any) {
+            console.error('Error:', error);
+            setError(error.message || 'An error occurred');
+            setTimeout(() => {
+                setError(null);
+            }, 3000);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <DropdownMenuItem onClick={handleSubmit}>
+            {feedback ? (
+                    <div className="flex space-x-2 justify-center items-center">
+                        <CheckCircle className="text-green-500"/>
+                        <p className="text-green-600">{successMessage}</p>
+                    </div>
+            ) : isError ? (
+                    <div className="flex space-x-2 justify-center items-center">
+                        <XCircle className="text-red-500"/>
+                        <p className="text-red-600">{isError}</p>
+                    </div>
+            ) : (
+                <>{isLoading ? <Spin/> : children}</>
+            )}
+        </DropdownMenuItem>
+    );
+};
+
 export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
     const user = params.data as User;
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
-
+    const api = useApi();
     const handleDelete = () => {
         setIsDeleteAlertOpen(true);
     };
 
-    const handleResetPassword =() => {
-        console.log(`Reset password: ${user.email}`);
+    const handleResetPassword = async () => {
+         await new Promise((resolve, reject) => {
+            api.user.sendUserPasswordReset.mutate(user.email, {
+                onSuccess: resolve,
+                onError:reject
+            });
+        });
     }
 
     const confirmDelete = () => {
@@ -210,6 +270,7 @@ export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
                         )}
                     </CustomModal>
 
+
                     <DropdownMenuItem onClick={handleToggleStatus}>
                         {user.is_active ? (
                             <>
@@ -228,12 +289,10 @@ export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
                         Manage API keys
                     </DropdownMenuItem>
                     <DropdownMenuSeparator/>
-                    <DropdownMenuItem
-                        onClick={handleResetPassword}
-                    >
-                        <RotateCcw className="h-4 w-4 mr-2"/>
+                    <ActionMenuItem handleAction={handleResetPassword} successMessage="Email sent!">
+                            <RotateCcw className="h-4 w-4 mr-2"/>
                         Reset Password
-                    </DropdownMenuItem>
+                    </ActionMenuItem>
 
                     <DropdownMenuItem
                         onClick={handleDelete}
@@ -244,8 +303,6 @@ export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
-
-            {/* Delete confirmation alert */}
             <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>

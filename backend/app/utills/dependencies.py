@@ -2,10 +2,10 @@ from typing import TypeVar
 from fastapi import HTTPException, Depends
 from starlette import status
 
-from app.routes.auth.api import valid_access_token
-from app.routes.auth.model import Token
-from app.routes.role.model import Role
-from app.routes.user.model import User
+from app.core.security.api import valid_access_token
+from app.models.auth.model import Token
+from app.models.role.model import Role
+from app.models.user.model import User
 
 T = TypeVar('T')
 

@@ -4,10 +4,10 @@ from fastapi import FastAPI
 from loguru import logger
 from starlette.middleware.cors import CORSMiddleware
 
-from app.config import settings
+from app.core.config import settings
 from app.db.db_manager import DBManager, create_app_admins
-from app.routes.auth.endpoints import auth_router
-from app.routes.user.endpoints import user_router
+from app.api.v1.auth.endpoints import auth_router
+from app.api.v1.user.endpoints import user_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

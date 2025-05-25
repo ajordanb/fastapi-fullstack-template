@@ -1,18 +1,18 @@
 from fastapi import APIRouter, Depends, Body, HTTPException, Request
-from app.routes.auth.helpers import password_authenticated_user, client_id_authenticated_user
-from app.routes.auth.model import SocialLoginRequest
+from app.core.security.helpers import password_authenticated_user, client_id_authenticated_user
+from app.models.auth.model import SocialLoginRequest
 
-from app.routes.auth.api import (
+from app.core.security.api import (
     Token,
     create_access_token,
     create_refresh_token,
     validate_refresh_token,
     policy, CustomOAuth2RequestForm, validate_link_token,
 )
-from app.routes.auth.model import RefreshToken
-from app.routes.auth.social import provider_map
-from app.config import settings
-from app.routes.user.model import User
+from app.models.auth.model import RefreshToken
+from app.core.security.social import provider_map
+from app.core.config import settings
+from app.models.user.model import User
 
 auth_router = APIRouter(tags=["Authentication"], prefix="/auth")
 

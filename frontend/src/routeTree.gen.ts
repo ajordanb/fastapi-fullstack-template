@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as ValidateMagicLinkImport } from './routes/validateMagicLink'
 import { Route as UnauthorizedImport } from './routes/unauthorized'
 import { Route as RequestNewPasswordImport } from './routes/requestNewPassword'
 import { Route as RequestMagicLinkImport } from './routes/requestMagicLink'
@@ -20,10 +21,16 @@ import { Route as IndexImport } from './routes/index'
 import { Route as DemoTanstackQueryImport } from './routes/demo.tanstack-query'
 import { Route as AuthenticatedManagerImport } from './routes/_authenticated/_manager'
 import { Route as AuthenticatedAdminImport } from './routes/_authenticated/_admin'
+import { Route as AuthenticatedAdminUsersImport } from './routes/_authenticated/admin/users'
 import { Route as AuthenticatedManagerReportsImport } from './routes/_authenticated/_manager/reports'
-import { Route as AuthenticatedAdminAdminUsersImport } from './routes/_authenticated/_admin/admin/users'
 
 // Create/Update Routes
+
+const ValidateMagicLinkRoute = ValidateMagicLinkImport.update({
+  id: '/validateMagicLink',
+  path: '/validateMagicLink',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const UnauthorizedRoute = UnauthorizedImport.update({
   id: '/unauthorized',
@@ -76,18 +83,17 @@ const AuthenticatedAdminRoute = AuthenticatedAdminImport.update({
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+
 const AuthenticatedManagerReportsRoute =
   AuthenticatedManagerReportsImport.update({
     id: '/reports',
     path: '/reports',
     getParentRoute: () => AuthenticatedManagerRoute,
-  } as any)
-
-const AuthenticatedAdminAdminUsersRoute =
-  AuthenticatedAdminAdminUsersImport.update({
-    id: '/admin/users',
-    path: '/admin/users',
-    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -136,6 +142,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UnauthorizedImport
       parentRoute: typeof rootRoute
     }
+    '/validateMagicLink': {
+      id: '/validateMagicLink'
+      path: '/validateMagicLink'
+      fullPath: '/validateMagicLink'
+      preLoaderRoute: typeof ValidateMagicLinkImport
+      parentRoute: typeof rootRoute
+    }
     '/_authenticated/_admin': {
       id: '/_authenticated/_admin'
       path: ''
@@ -164,28 +177,17 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedManagerReportsImport
       parentRoute: typeof AuthenticatedManagerImport
     }
-    '/_authenticated/_admin/admin/users': {
-      id: '/_authenticated/_admin/admin/users'
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
       path: '/admin/users'
       fullPath: '/admin/users'
-      preLoaderRoute: typeof AuthenticatedAdminAdminUsersImport
-      parentRoute: typeof AuthenticatedAdminImport
+      preLoaderRoute: typeof AuthenticatedAdminUsersImport
+      parentRoute: typeof AuthenticatedImport
     }
   }
 }
 
 // Create and export the route tree
-
-interface AuthenticatedAdminRouteChildren {
-  AuthenticatedAdminAdminUsersRoute: typeof AuthenticatedAdminAdminUsersRoute
-}
-
-const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
-  AuthenticatedAdminAdminUsersRoute: AuthenticatedAdminAdminUsersRoute,
-}
-
-const AuthenticatedAdminRouteWithChildren =
-  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedManagerRouteChildren {
   AuthenticatedManagerReportsRoute: typeof AuthenticatedManagerReportsRoute
@@ -199,13 +201,15 @@ const AuthenticatedManagerRouteWithChildren =
   AuthenticatedManagerRoute._addFileChildren(AuthenticatedManagerRouteChildren)
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedManagerRoute: typeof AuthenticatedManagerRouteWithChildren
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedManagerRoute: AuthenticatedManagerRouteWithChildren,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -219,9 +223,10 @@ export interface FileRoutesByFullPath {
   '/requestMagicLink': typeof RequestMagicLinkRoute
   '/requestNewPassword': typeof RequestNewPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/validateMagicLink': typeof ValidateMagicLinkRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/reports': typeof AuthenticatedManagerReportsRoute
-  '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
 }
 
 export interface FileRoutesByTo {
@@ -231,9 +236,10 @@ export interface FileRoutesByTo {
   '/requestMagicLink': typeof RequestMagicLinkRoute
   '/requestNewPassword': typeof RequestNewPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
+  '/validateMagicLink': typeof ValidateMagicLinkRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/reports': typeof AuthenticatedManagerReportsRoute
-  '/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
 }
 
 export interface FileRoutesById {
@@ -244,11 +250,12 @@ export interface FileRoutesById {
   '/requestMagicLink': typeof RequestMagicLinkRoute
   '/requestNewPassword': typeof RequestNewPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
-  '/_authenticated/_admin': typeof AuthenticatedAdminRouteWithChildren
+  '/validateMagicLink': typeof ValidateMagicLinkRoute
+  '/_authenticated/_admin': typeof AuthenticatedAdminRoute
   '/_authenticated/_manager': typeof AuthenticatedManagerRouteWithChildren
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/_authenticated/_manager/reports': typeof AuthenticatedManagerReportsRoute
-  '/_authenticated/_admin/admin/users': typeof AuthenticatedAdminAdminUsersRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
 }
 
 export interface FileRouteTypes {
@@ -260,6 +267,7 @@ export interface FileRouteTypes {
     | '/requestMagicLink'
     | '/requestNewPassword'
     | '/unauthorized'
+    | '/validateMagicLink'
     | '/demo/tanstack-query'
     | '/reports'
     | '/admin/users'
@@ -271,6 +279,7 @@ export interface FileRouteTypes {
     | '/requestMagicLink'
     | '/requestNewPassword'
     | '/unauthorized'
+    | '/validateMagicLink'
     | '/demo/tanstack-query'
     | '/reports'
     | '/admin/users'
@@ -282,11 +291,12 @@ export interface FileRouteTypes {
     | '/requestMagicLink'
     | '/requestNewPassword'
     | '/unauthorized'
+    | '/validateMagicLink'
     | '/_authenticated/_admin'
     | '/_authenticated/_manager'
     | '/demo/tanstack-query'
     | '/_authenticated/_manager/reports'
-    | '/_authenticated/_admin/admin/users'
+    | '/_authenticated/admin/users'
   fileRoutesById: FileRoutesById
 }
 
@@ -297,6 +307,7 @@ export interface RootRouteChildren {
   RequestMagicLinkRoute: typeof RequestMagicLinkRoute
   RequestNewPasswordRoute: typeof RequestNewPasswordRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
+  ValidateMagicLinkRoute: typeof ValidateMagicLinkRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
 }
 
@@ -307,6 +318,7 @@ const rootRouteChildren: RootRouteChildren = {
   RequestMagicLinkRoute: RequestMagicLinkRoute,
   RequestNewPasswordRoute: RequestNewPasswordRoute,
   UnauthorizedRoute: UnauthorizedRoute,
+  ValidateMagicLinkRoute: ValidateMagicLinkRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
 }
 
@@ -326,6 +338,7 @@ export const routeTree = rootRoute
         "/requestMagicLink",
         "/requestNewPassword",
         "/unauthorized",
+        "/validateMagicLink",
         "/demo/tanstack-query"
       ]
     },
@@ -336,7 +349,8 @@ export const routeTree = rootRoute
       "filePath": "_authenticated.tsx",
       "children": [
         "/_authenticated/_admin",
-        "/_authenticated/_manager"
+        "/_authenticated/_manager",
+        "/_authenticated/admin/users"
       ]
     },
     "/login": {
@@ -351,12 +365,12 @@ export const routeTree = rootRoute
     "/unauthorized": {
       "filePath": "unauthorized.tsx"
     },
+    "/validateMagicLink": {
+      "filePath": "validateMagicLink.tsx"
+    },
     "/_authenticated/_admin": {
       "filePath": "_authenticated/_admin.tsx",
-      "parent": "/_authenticated",
-      "children": [
-        "/_authenticated/_admin/admin/users"
-      ]
+      "parent": "/_authenticated"
     },
     "/_authenticated/_manager": {
       "filePath": "_authenticated/_manager.tsx",
@@ -372,9 +386,9 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/_manager/reports.tsx",
       "parent": "/_authenticated/_manager"
     },
-    "/_authenticated/_admin/admin/users": {
-      "filePath": "_authenticated/_admin/admin/users.tsx",
-      "parent": "/_authenticated/_admin"
+    "/_authenticated/admin/users": {
+      "filePath": "_authenticated/admin/users.tsx",
+      "parent": "/_authenticated"
     }
   }
 }

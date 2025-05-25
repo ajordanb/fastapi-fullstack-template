@@ -4,8 +4,8 @@ from typing import Any
 import emails
 from loguru import logger
 
-from app.config import settings
-from app.shared.model import EmailData
+from app.core.config import settings
+from app.models.util.model import EmailData
 
 
 def render_email_template(*, template_name: str, context: dict[str, Any]) -> str:

@@ -2,11 +2,10 @@ import httpx
 import jwt
 from async_lru import alru_cache
 
-from app.routes.auth.api import verify_password, CustomOAuth2RequestForm
-from app.config import settings
-from app.routes.user.model import User, APIKey
+from app.core.security.api import verify_password, CustomOAuth2RequestForm
+from app.core.config import settings
+from app.models.user.model import User, APIKey
 from fastapi import HTTPException
-from typing import List, Tuple
 
 GOOGLE_KEYS_URL = "https://www.googleapis.com/oauth2/v3/certs"
 AUDIENCE = settings.google_client_id

@@ -4,12 +4,12 @@ import motor.motor_asyncio
 from beanie import Document, init_beanie
 from loguru import logger
 
-from app.routes.auth.api import password_context
-from app.config import settings
+from app.core.security.api import password_context
+from app.core.config import settings
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from app.routes.role.model import Role, RoleOut
-from app.routes.user.model import User
+from app.models.role.model import Role
+from app.models.user.model import User
 
 
 class DBManager:

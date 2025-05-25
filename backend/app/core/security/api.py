@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, UTC
-from typing import Any, Tuple, Union, Optional, List, Dict
+from typing import Any, Tuple, Union, Optional, List
 from password_strength import PasswordPolicy
 
-from app.routes.auth.model import Token, TokenType
-from app.config import settings
+from app.models.auth.model import Token, TokenType
+from app.core.config import settings
 from fastapi import Depends, HTTPException, Form
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext

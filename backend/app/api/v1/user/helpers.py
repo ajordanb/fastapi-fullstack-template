@@ -2,9 +2,9 @@ from datetime import datetime, UTC, timedelta
 
 from fastapi import HTTPException
 
-from app.config import settings
-from app.routes.auth.model import MagicLink
-from app.routes.user.model import User
+from app.core.config import settings
+from app.models.auth.model import MagicLink
+from app.models.user.model import User
 
 
 async def validate_user_does_not_exist(email: str):
