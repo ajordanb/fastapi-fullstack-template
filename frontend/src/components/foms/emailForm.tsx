@@ -16,9 +16,8 @@ import { CheckCircle } from "lucide-react";
 import {
     useNavigate,
 } from "@tanstack/react-router";
+import {useCountdown} from "@/hooks/useCoundown.tsx";
 
-
-// Create a generic email form schema
 const emailSchema = z.object({
     email: z.string().email("Invalid email address"),
 });
@@ -58,6 +57,8 @@ export function EmailActionForm({
     const [error, setError] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<string | null>(null);
     const navigate = useNavigate();
+    const timeoutSeconds = 60;
+    const { timeLeft, isActive, start, reset } = useCountdown(timeoutSeconds);
 
     const form = useForm<EmailFormValues>({
         resolver: zodResolver(emailSchema),
@@ -72,9 +73,10 @@ export function EmailActionForm({
 
         try {
             await onSubmit(values);
+            // Start countdown and show success
             setFeedback(successMessage);
+            start(); // Start the countdown timer
         } catch (error: any) {
-            console.error('Error:', error);
             setError(error.message || 'An error occurred');
         } finally {
             setIsLoading(false);
@@ -83,7 +85,21 @@ export function EmailActionForm({
 
     const handleReset = () => {
         setFeedback(null);
+        reset(); // Reset the countdown
         form.reset();
+    };
+
+    // Format the feedback message with live countdown
+    const getFeedbackMessage = () => {
+        if (!feedback) return '';
+
+        if (isActive && timeLeft > 0) {
+            return `${feedback} You can request again in...`;
+        } else if (timeLeft === 0) {
+            return feedback;
+        }
+
+        return feedback;
     };
 
     return (
@@ -101,11 +117,20 @@ export function EmailActionForm({
                         <CheckCircle className="h-12 w-12 text-green-500"/>
                     </div>
                     <h3 className="text-lg font-semibold text-green-600">{successTitle}</h3>
-                    <p className="text-green-600">{feedback}</p>
+                    <p className="text-green-600">{getFeedbackMessage()}</p>
+
+                    {/* Show countdown separately for better visibility */}
+                    {isActive && timeLeft > 0 && (
+                        <div className="text-2xl font-mono text-blue-600 bg-blue-50 rounded-lg p-3">
+                            {timeLeft}s
+                        </div>
+                    )}
+
                     <Button
                         variant="outline"
                         className="mt-4 w-full"
                         onClick={handleReset}
+                        disabled={isActive && timeLeft > 0} // Disable until countdown finishes
                     >
                         {successButtonText}
                     </Button>
@@ -139,11 +164,11 @@ export function EmailActionForm({
                         >
                             {isLoading ? "Processing..." : buttonText}
                         </Button>
-                         <Button
-                              variant="outline"
+                        <Button
+                            variant="outline"
                             className="mt-2 w-full"
                             disabled={isLoading}
-                              onClick={() => navigate({to: "/login"})}
+                            onClick={() => navigate({to: "/login"})}
                         >
                             Back to login
                         </Button>
@@ -153,4 +178,3 @@ export function EmailActionForm({
         </FormWrapper>
     )
 }
-
