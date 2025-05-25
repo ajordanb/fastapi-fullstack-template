@@ -6,6 +6,8 @@ import {AuthProvider} from "@/contexts/auth/AuthContext";
 import {GoogleOAuthProvider} from "@react-oauth/google";
 import {ThemeProvider} from "./contexts/theme/ThemeContext";
 import * as TanstackQuery from "./integrations/tanstack-query/root-provider";
+import {Toaster} from "@/components/ui/sonner"
+
 
 import {routeTree} from "./routeTree.gen";
 
@@ -35,13 +37,17 @@ function InnerApp() {
     const auth = useAuth();
 
     return (
-        <RouterProvider
-            router={router}
-            context={{
-                ...TanstackQuery.getContext(),
-                auth,
-            }}
-        />
+        <>
+            <RouterProvider
+                router={router}
+                context={{
+                    ...TanstackQuery.getContext(),
+                    auth,
+                }}
+            />
+            <Toaster/>
+        </>
+
     );
 }
 

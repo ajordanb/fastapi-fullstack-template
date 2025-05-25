@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { AgGridReact } from "ag-grid-react";
-import {  themeQuartz } from "ag-grid-community";
+import {ClientSideRowModelApiModule, themeQuartz} from "ag-grid-community";
 import {
   type GridApi,
   type GridReadyEvent,
@@ -13,6 +13,7 @@ import { useTheme } from "@/hooks/useTheme";
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule,
+  ClientSideRowModelApiModule,
   ColumnAutoSizeModule,
 ]);
 

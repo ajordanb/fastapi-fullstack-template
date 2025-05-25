@@ -22,7 +22,7 @@ import { Route as DemoTanstackQueryImport } from './routes/demo.tanstack-query'
 import { Route as AuthenticatedManagerImport } from './routes/_authenticated/_manager'
 import { Route as AuthenticatedAdminImport } from './routes/_authenticated/_admin'
 import { Route as AuthenticatedAdminUsersImport } from './routes/_authenticated/admin/users'
-import { Route as AuthenticatedManagerReportsImport } from './routes/_authenticated/_manager/reports'
+import { Route as AuthenticatedManagerReportsImport } from '@/routes/_authenticated/manager/reports'
 
 // Create/Update Routes
 
@@ -74,7 +74,7 @@ const DemoTanstackQueryRoute = DemoTanstackQueryImport.update({
 } as any)
 
 const AuthenticatedManagerRoute = AuthenticatedManagerImport.update({
-  id: '/_manager',
+  id: '/manager',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
@@ -349,7 +349,7 @@ export const routeTree = rootRoute
       "filePath": "_authenticated.tsx",
       "children": [
         "/_authenticated/_admin",
-        "/_authenticated/_manager",
+        "/_authenticated/manager",
         "/_authenticated/admin/users"
       ]
     },
@@ -372,19 +372,19 @@ export const routeTree = rootRoute
       "filePath": "_authenticated/_admin.tsx",
       "parent": "/_authenticated"
     },
-    "/_authenticated/_manager": {
-      "filePath": "_authenticated/_manager.tsx",
+    "/_authenticated/manager": {
+      "filePath": "_authenticated/manager.tsx",
       "parent": "/_authenticated",
       "children": [
-        "/_authenticated/_manager/reports"
+        "/_authenticated/manager/reports"
       ]
     },
     "/demo/tanstack-query": {
       "filePath": "demo.tanstack-query.tsx"
     },
-    "/_authenticated/_manager/reports": {
-      "filePath": "_authenticated/_manager/reports.tsx",
-      "parent": "/_authenticated/_manager"
+    "/_authenticated/manager/reports": {
+      "filePath": "_authenticated/manager/reports.tsx",
+      "parent": "/_authenticated/manager"
     },
     "/_authenticated/admin/users": {
       "filePath": "_authenticated/admin/users.tsx",

@@ -35,13 +35,7 @@ export const userApi = (): UserApi => {
             `${baseUrl}/email_password_reset_link`,
             null,
             {params: {email: email}}
-        ),
-        onSuccess: () => {
-            console.log('Success!')
-        },
-        onError: (error) => {
-            console.error(error);
-        }
+        )
     });
 
     const sendMagicLink  = useMutation<unknown, Error, string>({
@@ -49,13 +43,7 @@ export const userApi = (): UserApi => {
             `${baseUrl}/send_magic_link`,
             null,
             {params: {email: email}}
-        ),
-        onSuccess: () => {
-            console.log('Success!')
-        },
-        onError: (error) => {
-            console.error(error);
-        }
+        )
     });
     return {
         useUserProfileQuery,

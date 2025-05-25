@@ -20,17 +20,18 @@ import {Badge} from "@/components/ui/badge.tsx";
 import type {ICellRendererParams} from "ag-grid-community";
 import {CheckCircle, Edit, Key, MoreHorizontal, Trash2, XCircle, RotateCcw} from "lucide-react";
 import type {ApiKey, User, UserRole} from "@/api/user/model.tsx";
-import React, {type ReactNode, useState} from "react";
+import React, {type ReactNode, useEffect, useState} from "react";
 import {Button} from "../ui/button.tsx";
 import CustomModal from "@/components/customModal.tsx";
 import AddUserDialog from "@/components/user/addUserDialog.tsx";
 import {useApi} from "@/api/api.tsx";
 import {Spin} from "antd";
+import {toast} from "sonner"
 
 
 interface ActionProps {
-    handleAction:(value: any) => Promise<void> | void;
-    children:ReactNode;
+    handleAction: (value: any) => Promise<void> | void;
+    children: ReactNode;
     successMessage: string;
 }
 
@@ -165,7 +166,19 @@ export const ActionMenuItem: React.FC<ActionProps> = ({handleAction, children, s
     const [isError, setError] = useState<string | null>(null);
     const [feedback, setFeedback] = useState<string | null>(null);
 
-    const handleSubmit = async (e:React.MouseEvent) => {
+    useEffect(() => {
+        if (feedback) {
+            toast.success(feedback);
+        }
+    }, [feedback]);
+
+    useEffect(() => {
+        if (isError) {
+            toast.error(isError);
+        }
+    }, [isError]);
+
+    const handleSubmit = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
@@ -189,22 +202,9 @@ export const ActionMenuItem: React.FC<ActionProps> = ({handleAction, children, s
             setIsLoading(false);
         }
     };
-
     return (
         <DropdownMenuItem onClick={handleSubmit}>
-            {feedback ? (
-                    <div className="flex space-x-2 justify-center items-center">
-                        <CheckCircle className="text-green-500"/>
-                        <p className="text-green-600">{successMessage}</p>
-                    </div>
-            ) : isError ? (
-                    <div className="flex space-x-2 justify-center items-center">
-                        <XCircle className="text-red-500"/>
-                        <p className="text-red-600">{isError}</p>
-                    </div>
-            ) : (
-                <>{isLoading ? <Spin/> : children}</>
-            )}
+            {isLoading ? <Spin/> : children}
         </DropdownMenuItem>
     );
 };
@@ -218,17 +218,21 @@ export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
     };
 
     const handleResetPassword = async () => {
-         await new Promise((resolve, reject) => {
+        await new Promise((resolve, reject) => {
             api.user.sendUserPasswordReset.mutate(user.email, {
                 onSuccess: resolve,
-                onError:reject
+                onError: reject
             });
         });
     }
 
     const confirmDelete = () => {
-        console.log(`Delete user: ${user.username}`);
+        console.log(`Delete user: ${user.id}`);
         setIsDeleteAlertOpen(false);
+        toast.success("User deleted successfully")
+        setTimeout(() => {
+            params.api.applyTransaction({remove: [user]})
+        }, 1000);
     };
 
     const handleToggleStatus = () => {
@@ -290,7 +294,7 @@ export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator/>
                     <ActionMenuItem handleAction={handleResetPassword} successMessage="Email sent!">
-                            <RotateCcw className="h-4 w-4 mr-2"/>
+                        <RotateCcw className="h-4 w-4 mr-2"/>
                         Reset Password
                     </ActionMenuItem>
 

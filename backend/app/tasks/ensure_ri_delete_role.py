@@ -6,12 +6,6 @@ from app.utills.util import fire_and_forget
 async def ensure_ri_delete_role(role_id):
     """
     Remove a role from all users who have it (referential integrity cleanup)
-
-    Args:
-        role_id: The role ID to remove from users
-
-    Returns:
-        List of user IDs that had the role removed
     """
     users_with_role = await User.has_role(role_id)
     for user in users_with_role:
