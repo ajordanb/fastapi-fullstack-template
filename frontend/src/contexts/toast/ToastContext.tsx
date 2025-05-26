@@ -1,5 +1,5 @@
-import React, { createContext, useRef } from 'react';
-import { toast } from 'sonner';
+import React, {createContext, useRef} from 'react';
+import {toast} from 'sonner';
 import {Spin} from "antd";
 
 interface ToastContextType {
@@ -31,16 +31,15 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (loadingToastRef.current) {
       toast.dismiss(loadingToastRef.current);
     }
-    const loadingToastId = toast(
-      <div className="flex items-center gap-4">
-        <Spin className="w-4 h-4" />
-        <span>{message}</span>
-      </div>,
-      {
-        duration: Infinity,
-      }
+      loadingToastRef.current = toast(
+        <div className="flex items-center gap-4">
+            <Spin className="w-4 h-4"/>
+            <span>{message}</span>
+        </div>,
+        {
+            duration: Infinity,
+        }
     );
-    loadingToastRef.current = loadingToastId;
   } else {
     if (loadingToastRef.current) {
       toast.dismiss(loadingToastRef.current);
