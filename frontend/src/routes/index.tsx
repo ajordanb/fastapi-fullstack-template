@@ -1,9 +1,9 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {LogIn, Code, Database, Zap, Shield, Github} from 'lucide-react'
-import {Button} from '@/components/ui/button'
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card'
 import {Badge} from '@/components/ui/badge'
 import {useNavigate} from '@tanstack/react-router'
+import CustomButton from "@/components/custom/customButton.tsx";
 
 function LandingPage() {
     const navigate = useNavigate()
@@ -21,35 +21,35 @@ function LandingPage() {
             icon: Code,
             title: 'TypeScript',
             description: 'Full type safety across the stack',
-            color: 'text-purple-400'
+            color: 'text-blue-400'
         },
         {
             icon: Database,
             title: 'FastAPI',
             description: 'High-performance Python backend',
-            color: 'text-green-400'
+            color: 'text-cyan-400'
         },
         {
             icon: Zap,
             title: 'TanStack',
             description: 'Powerful data fetching & routing',
-            color: 'text-yellow-400'
+            color: 'text-sky-400'
         },
         {
             icon: Shield,
             title: 'Shadcn/ui',
             description: 'Beautiful, accessible components',
-            color: 'text-blue-400'
+            color: 'text-indigo-400'
         }
     ]
 
     return (
-        <div className="min-h-[90vh] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-3">
+        <div className="min-h-[90vh] bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-3">
             <div className="absolute inset-0"></div>
             <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
               <div className="text-center max-w-4xl mx-auto">
                 <div className="mb-8 flex justify-center">
-                  <div className="p-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl shadow-2xl">
+                  <div className="p-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl shadow-2xl">
                     <Zap className="w-12 h-12 text-white"/>
                   </div>
                 </div>
@@ -63,7 +63,7 @@ function LandingPage() {
 
                 <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
                   Full Stack
-                  <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
               {" "}FastAPI
             </span>
                   <br/>
@@ -76,24 +76,23 @@ function LandingPage() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-                  <Button
+                  <CustomButton
                       onClick={handleLogin}
                       size="lg"
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold px-8 py-6 text-lg group"
+                      variant="primary"
                   >
                     <LogIn className="w-5 h-5 mr-3 group-hover:rotate-6 transition-transform"/>
                     Get Started
-                  </Button>
+                  </CustomButton>
 
-                  <Button
+                  <CustomButton
                       onClick={handleGithubRedirect}
                       variant="outline"
                       size="lg"
-                      className="bg-slate-800/50 border-slate-600 text-white hover:bg-slate-700/50 font-semibold px-8 py-6 text-lg group"
                   >
                     <Github className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform"/>
                     View on GitHub
-                  </Button>
+                  </CustomButton>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
@@ -124,19 +123,19 @@ function LandingPage() {
                       <h3 className="text-2xl font-semibold text-white mb-4">What's Included?</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                         <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                          <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
                           <span className="text-slate-300">Authentication & Authorization</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                          <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
                           <span className="text-slate-300">Database Integration</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                          <div className="w-2 h-2 bg-sky-400 rounded-full"></div>
                           <span className="text-slate-300">API Documentation</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
+                          <div className="w-2 h-2 bg-indigo-400 rounded-full"></div>
                           <span className="text-slate-300">Docker Configuration</span>
                         </div>
 
