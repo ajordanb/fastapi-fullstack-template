@@ -5,6 +5,7 @@ import TanstackQueryLayout from '../integrations/tanstack-query/layout'
 
 import type { QueryClient } from '@tanstack/react-query'
 import type { AuthContextType } from '@/contexts/auth/model';
+import {NotFoundPage} from "@/routes/notFound.tsx";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -20,5 +21,5 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       <TanstackQueryLayout />
     </>
   ),
-    notFoundComponent: () => <div>404 Not Found</div>,
+    notFoundComponent: () => <NotFoundPage/>,
 })
