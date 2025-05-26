@@ -12,7 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState, type ReactNode } from "react";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, ArrowLeft, Mail } from "lucide-react";
 import {
     useNavigate,
 } from "@tanstack/react-router";
@@ -27,7 +27,7 @@ export type EmailFormValues = z.infer<typeof emailSchema>;
 export interface EmailActionFormProps {
     title: string;
     subheading: string;
-    logo: {
+    logo?: {
         url: string;
         src: string;
         alt: string;
@@ -73,9 +73,8 @@ export function EmailActionForm({
 
         try {
             await onSubmit(values);
-            // Start countdown and show success
             setFeedback(successMessage);
-            start(); // Start the countdown timer
+            start();
         } catch (error: any) {
             setError(error.message || 'An error occurred');
         } finally {
@@ -89,7 +88,6 @@ export function EmailActionForm({
         form.reset();
     };
 
-    // Format the feedback message with live countdown
     const getFeedbackMessage = () => {
         if (!feedback) return '';
 
@@ -114,23 +112,24 @@ export function EmailActionForm({
             {feedback ? (
                 <div className="text-center space-y-4">
                     <div className="flex justify-center">
-                        <CheckCircle className="h-12 w-12 text-green-500"/>
+                        <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full shadow-lg">
+                            <CheckCircle className="h-8 w-8 text-white"/>
+                        </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-green-600">{successTitle}</h3>
-                    <p className="text-green-600">{getFeedbackMessage()}</p>
+                    <h3 className="text-lg font-semibold text-white">{successTitle}</h3>
+                    <p className="text-slate-300">{getFeedbackMessage()}</p>
 
-                    {/* Show countdown separately for better visibility */}
                     {isActive && timeLeft > 0 && (
-                        <div className="text-2xl font-mono text-blue-600 bg-blue-50 rounded-lg p-3">
+                        <div className="text-xl font-mono text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                             {timeLeft}s
                         </div>
                     )}
 
                     <Button
-                        variant="outline"
-                        className="mt-4 w-full"
                         onClick={handleReset}
-                        disabled={isActive && timeLeft > 0} // Disable until countdown finishes
+                        className="mt-4 w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                        disabled={isActive && timeLeft > 0}
+                        size="lg"
                     >
                         {successButtonText}
                     </Button>
@@ -138,7 +137,7 @@ export function EmailActionForm({
             ) : (
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(handleSubmit)}
-                          className="grid gap-4">
+                          className="space-y-4">
                         <FormField
                             control={form.control}
                             name="email"
@@ -149,27 +148,42 @@ export function EmailActionForm({
                                             type="email"
                                             placeholder={placeholder}
                                             disabled={isLoading}
+                                            className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500"
                                             {...field}
                                         />
                                     </FormControl>
-                                    <FormMessage/>
+                                    <FormMessage className="text-red-400"/>
                                 </FormItem>
                             )}
                         />
                         {additionalContent}
                         <Button
                             type="submit"
-                            className="mt-2 w-full"
+                            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold shadow-lg hover:shadow-xl transform transition-all duration-200"
                             disabled={isLoading}
+                            size="lg"
                         >
-                            {isLoading ? "Processing..." : buttonText}
+                            {isLoading ? (
+                                <>
+                                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Processing...
+                                </>
+                            ) : (
+                                <>
+                                    <Mail className="mr-2 w-4 h-4" />
+                                    {buttonText}
+                                </>
+                            )}
                         </Button>
                         <Button
                             variant="outline"
-                            className="mt-2 w-full"
+                            className="w-full bg-slate-700/50 border-slate-600 text-white hover:bg-slate-600/50 transition-all duration-200"
                             disabled={isLoading}
                             onClick={() => navigate({to: "/login"})}
+                            type="button"
+                            size="lg"
                         >
+                            <ArrowLeft className="mr-2 w-4 h-4" />
                             Back to login
                         </Button>
                     </form>

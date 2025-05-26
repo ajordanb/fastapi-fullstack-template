@@ -23,11 +23,6 @@ function MagicLinkRequestComponent() {
         <EmailActionForm
             title="Request Magic Link"
             subheading="Enter your email to receive a login link"
-            logo={{
-                url: "https://www.shadcnblocks.com",
-                src: "https://shadcnblocks.com/images/block/logos/shadcnblockscom-icon.svg",
-                alt: "Shadcnblocks",
-            }}
             buttonText="Request Link"
             onSubmit={handleMagicLinkRequest}
             successTitle="Magic Link Sent!"

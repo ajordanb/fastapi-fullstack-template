@@ -23,11 +23,6 @@ function PasswordResetComponent() {
         <EmailActionForm
             title="Reset Password"
             subheading="Enter your email to receive a password reset link"
-            logo={{
-                url: "https://www.shadcnblocks.com",
-                src: "https://shadcnblocks.com/images/block/logos/shadcnblockscom-icon.svg",
-                alt: "Shadcnblocks",
-            }}
             buttonText="Reset Password"
             onSubmit={handlePasswordReset}
             successTitle="Reset Link Sent!"
