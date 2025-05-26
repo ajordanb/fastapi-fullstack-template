@@ -5,7 +5,7 @@ import TanstackQueryLayout from '../integrations/tanstack-query/layout'
 
 import type { QueryClient } from '@tanstack/react-query'
 import type { AuthContextType } from '@/contexts/auth/model';
-import {NotFoundPage} from "@/routes/notFound.tsx";
+import {NotFoundPage} from "@/components/pages/misc/notFound.tsx";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -17,7 +17,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     <>
       <Outlet />
       <TanStackRouterDevtools />
-
       <TanstackQueryLayout />
     </>
   ),

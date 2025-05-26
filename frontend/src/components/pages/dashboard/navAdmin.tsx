@@ -1,7 +1,7 @@
 import { type LucideIcon} from "lucide-react"
 import {
     SidebarGroup,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar.tsx"
 import CollapsibleMenu from "@/components/collapsibleMenu.tsx";
 
 export function NavAdmin({

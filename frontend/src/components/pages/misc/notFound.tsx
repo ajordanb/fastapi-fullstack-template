@@ -1,20 +1,17 @@
 import {Home, ArrowLeft, Search, AlertTriangle, LogIn} from 'lucide-react'
-import {Card, CardContent} from '@/components/ui/card'
+import {Card, CardContent} from '@/components/ui/card.tsx'
 import {useNavigate} from '@tanstack/react-router'
 import CustomButton from "@/components/custom/customButton.tsx";
 
 
 export function NotFoundPage() {
     const navigate = useNavigate()
-
     const handleGoHome = () => {
         navigate({to: '/'})
     }
-
     const handleGoBack = () => {
         window.history.back()
     }
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-3">
             <div className="absolute inset-0"></div>

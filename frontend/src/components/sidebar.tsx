@@ -4,8 +4,8 @@ import {
     UserIcon
 } from "lucide-react"
 
-import {NavAdmin} from "@/components/dashboard/navAdmin.tsx"
-import {NavUser} from "@/components/dashboard/navUser"
+import {NavAdmin} from "@/components/pages/dashboard/navAdmin.tsx"
+import {NavUser} from "@/components/pages/dashboard/navUser"
 import {
     Sidebar,
     SidebarContent,

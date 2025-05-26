@@ -14,6 +14,7 @@ import {routeTree} from "./routeTree.gen";
 import "./styles.css";
 import reportWebVitals from "./reportWebVitals";
 import {ModalProvider} from "@/contexts/modal/ModalContext.tsx";
+import {ToastProvider} from "@/contexts/toast/ToastContext.tsx";
 
 const router = createRouter({
     routeTree,
@@ -38,14 +39,16 @@ function InnerApp() {
 
     return (
         <>
-            <RouterProvider
-                router={router}
-                context={{
-                    ...TanstackQuery.getContext(),
-                    auth,
-                }}
-            />
-            <Toaster/>
+            <ToastProvider>
+                <RouterProvider
+                    router={router}
+                    context={{
+                        ...TanstackQuery.getContext(),
+                        auth,
+                    }}
+                />
+                <Toaster/>
+            </ToastProvider>
         </>
 
     );

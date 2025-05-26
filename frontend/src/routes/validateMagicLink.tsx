@@ -43,7 +43,7 @@ function ValidateMagicLink() {
 
         // Redirect after successful validation
         setTimeout(() => {
-          navigate({ to: '/dashboard' });
+          navigate({ to: '/' });
         }, 1500);
 
       } catch (error) {

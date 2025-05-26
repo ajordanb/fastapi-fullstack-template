@@ -1,10 +1,10 @@
 import React, {useState, useCallback, useMemo} from "react";
-import CustomGrid from "@/components/grid/customGrid";
+import CustomGrid from "@/components/grid/customGrid.tsx";
 import {
     type ColDef,
 } from "ag-grid-community";
-import {Card, CardContent, CardHeader, CardTitle, CardDescription} from "@/components/ui/card";
-import {Button} from "@/components/ui/button";
+import {Card, CardContent, CardHeader, CardTitle, CardDescription} from "@/components/ui/card.tsx";
+import {Button} from "@/components/ui/button.tsx";
 
 import {
     RefreshCw,
@@ -18,15 +18,17 @@ import {
     RolesBadge,
     SourceBadge,
     StatusBadge
-} from "@/components/user/customCellRenderers.tsx";
+} from "@/components/pages/user/customCellRenderers.tsx";
 import {useApi} from "@/api/api.tsx";
 import CustomModal from "@/components/customModal.tsx";
 import {Spin} from "antd";
-import AddUserDialog from "@/components/user/addUserDialog.tsx";
+import AddUserDialog from "@/components/pages/user/addUserDialog.tsx";
+import {useToast} from "@/hooks/useToast.tsx";
 
 
 const UserManagementExample: React.FC = () => {
     const [searchText, setSearchText] = useState("");
+    const {setLoading } = useToast();
 
     const api = useApi()
     const {data: users, refetch, isLoading, isFetching} = api.user.useAllUsersQuery();
@@ -118,6 +120,8 @@ const UserManagementExample: React.FC = () => {
         []
     );
 
+    setLoading("Loading user data", isLoading)
+
     return (
 
         <Card className="shadow-sm border-0">
@@ -131,7 +135,7 @@ const UserManagementExample: React.FC = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                         <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             onClick={handleRefresh}
                             className="cursor-pointer h-9 px-2 lg:px-3"

@@ -12,7 +12,7 @@ import {
 import {
     Avatar,
     AvatarFallback,
-} from "@/components/ui/avatar"
+} from "@/components/ui/avatar.tsx"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -21,16 +21,16 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu.tsx"
 import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
     useSidebar,
-} from "@/components/ui/sidebar"
-import ModeToggle from "../modeToggle"
-import type {User} from "@/api/user/model"
-import {useAuth} from "@/hooks/useAuth"
+} from "@/components/ui/sidebar.tsx"
+import ModeToggle from "../../modeToggle.tsx"
+import type {User} from "@/api/user/model.tsx"
+import {useAuth} from "@/hooks/useAuth.tsx"
 
 export function NavUser({
                             user,

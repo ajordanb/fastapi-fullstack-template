@@ -21,12 +21,13 @@ import type {ICellRendererParams} from "ag-grid-community";
 import {CheckCircle, Edit, Key, MoreHorizontal, Trash2, XCircle, RotateCcw} from "lucide-react";
 import type {ApiKey, User, UserRole} from "@/api/user/model.tsx";
 import React, {type ReactNode, useEffect, useState} from "react";
-import {Button} from "../ui/button.tsx";
+import {Button} from "../../ui/button.tsx";
 import CustomModal from "@/components/customModal.tsx";
-import AddUserDialog from "@/components/user/addUserDialog.tsx";
+import AddUserDialog from "@/components/pages/user/addUserDialog.tsx";
 import {useApi} from "@/api/api.tsx";
 import {Spin} from "antd";
 import {toast} from "sonner"
+import {useToast} from "@/hooks/useToast.tsx";
 
 
 interface ActionProps {
@@ -210,6 +211,8 @@ export const ActionMenuItem: React.FC<ActionProps> = ({handleAction, children, s
 };
 
 export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
+    const {setSuccess } = useToast();
+
     const user = params.data as User;
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
     const api = useApi();
@@ -229,7 +232,7 @@ export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
     const confirmDelete = () => {
         console.log(`Delete user: ${user.id}`);
         setIsDeleteAlertOpen(false);
-        toast.success("User deleted successfully")
+        setSuccess("User deleted successfully")
         setTimeout(() => {
             params.api.applyTransaction({remove: [user]})
         }, 1000);
