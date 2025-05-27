@@ -43,6 +43,13 @@ invalid_token_format_exception = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
+policy = PasswordPolicy.from_names(
+    length=8,  # min length: 8
+    uppercase=1,  # need min. 2 uppercase letters
+    numbers=1,  # need min. 2 digits
+    nonletters=1,  # need min. 2 special characters
+)
+
 
 class CustomOAuth2RequestForm:
     def __init__(
@@ -98,10 +105,12 @@ class RefreshTokenReq(BaseModel):
 def validate_refresh_token(req: RefreshTokenReq) -> Token:
     return validate_token(req.refreshToken, JWT_REFRESH_SECRET_KEY)
 
+
 def validate_link_token(token: str) -> Token:
     if token.startswith("Bearer "):
         token = token[7:]
     return validate_token(token, JWT_SECRET_KEY)
+
 
 def valid_access_token(token: str = Depends(reuseable_oauth)) -> Token | None:
     if token:
@@ -160,14 +169,3 @@ def encoded_token_data(subject: Union[str, Any], expires_delta: int = None,
     encoded = jwt.encode(payload, JWT_SECRET_KEY, ALGORITHM)
     return encoded, exp
 
-
-policy = PasswordPolicy.from_names(
-    length=8,  # min length: 8
-    uppercase=1,  # need min. 2 uppercase letters
-    numbers=1,  # need min. 2 digits
-    nonletters=1,  # need min. 2 special characters
-)
-
-
-def password_is_weak(password: str) -> bool:
-    return bool(policy.test(password))
