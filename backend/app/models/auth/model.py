@@ -4,10 +4,6 @@ from typing import Optional
 from pydantic import BaseModel, model_validator, EmailStr
 
 
-class MagicLink(BaseModel):
-    identifier: EmailStr
-    payload: dict
-
 class AccessToken(BaseModel):
     """Access token details"""
 

@@ -20,5 +20,6 @@ dependencies = [
     "pydantic-settings>=2.9.1",
     "pyjwt>=2.10.1",
     "python-multipart>=0.0.20",
+    "slowapi>=0.1.9",
     "uvicorn>=0.34.2",
 ]

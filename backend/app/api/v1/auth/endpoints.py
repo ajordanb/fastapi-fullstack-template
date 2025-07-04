@@ -21,8 +21,10 @@ auth_router = APIRouter(tags=["Authentication"], prefix="/auth")
 async def login_ep(request: Request, form: CustomOAuth2RequestForm = Depends()) -> RefreshToken:
     if form.username and form.password:
         user = await password_authenticated_user(form)
+        provider = "username_password"
     elif form.client_id:
         user = await client_id_authenticated_user(form)
+        provider = "client_id"
     else:
         raise HTTPException(401, "No login info")
     scopes, user_role_names = await user.get_user_scopes_and_roles()
@@ -31,6 +33,11 @@ async def login_ep(request: Request, form: CustomOAuth2RequestForm = Depends()) 
     else:
         access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
     refresh_token, rt_expires = create_refresh_token(subject=user.email, scopes=scopes, roles=user_role_names)
+    user.log_login(payload={
+        "source": "token_login",
+        "provider": provider,
+    })
+    await user.save()
     return RefreshToken(
         accessToken=access_token,
         accessTokenExpires=at_expires,
@@ -49,11 +56,16 @@ async def social_login_ep(req: SocialLoginRequest) -> RefreshToken:
                 status_code=403,
                 detail="New users are not allowed in this environment",
             )
-        user = User(email=email, source=req.provider, referral_code=req.referral_code)
+        user = User(email=email, source=req.provider)
         await user.save()
     scopes, user_role_names = await user.get_user_scopes_and_roles()
     access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
     refresh_token, rt_expires = create_refresh_token(subject=user.email, scopes=scopes, roles=user_role_names)
+    user.log_login(payload={
+        "source":"social_login",
+        "provider":req.provider,
+    })
+    await user.save()
     return RefreshToken(
         accessToken=access_token,
         accessTokenExpires=at_expires,

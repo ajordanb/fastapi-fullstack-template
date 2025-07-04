@@ -123,8 +123,7 @@ const UserManagementExample: React.FC = () => {
     setLoading("Loading user data", isLoading)
 
     return (
-
-        <Card className="shadow-sm border-0">
+ <Card className="shadow-sm border-0">
             <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                     <div>
@@ -155,18 +154,17 @@ const UserManagementExample: React.FC = () => {
                         <CustomModal
                             id="add-user-modal"
                             title="Add user"
-                            modalContent={<AddUserDialog onSubmit={() => console.log('submit')}/>}
-                        >
-                            {(openFn) => (
-                                <Button className="cursor-pointer" onClick={openFn}>
+                            component={
+                                <Button className="cursor-pointer">
                                     <UserPlus className="h-4 w-4 lg:mr-2"/>
                                 </Button>
-                            )}
+                            }
+                        >
+                            <AddUserDialog onSubmit={() => console.log('submit')}/>
                         </CustomModal>
                     </div>
                 </div>
             </CardHeader>
-            {/* Card header remains the same */}
             <CardContent>
                 <CustomGrid
                     rowData={users ? users : []}

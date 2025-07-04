@@ -211,7 +211,7 @@ export const ActionMenuItem: React.FC<ActionProps> = ({handleAction, children, s
 };
 
 export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
-    const {setSuccess } = useToast();
+    const {setSuccess} = useToast();
 
     const user = params.data as User;
     const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
@@ -263,18 +263,15 @@ export const ActionButtons: React.FC<ICellRendererParams> = (params) => {
                     <CustomModal
                         id="edit-user-modal"
                         title="Edit user"
-                        modalContent={<AddUserDialog onSubmit={() => console.log('submit')}/>}
-                    >
-                        {(openFn) => (
-                            <DropdownMenuItem onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                openFn();
-                            }}>
+                        component={
+                            <DropdownMenuItem>
                                 <Edit className="h-4 w-4 mr-2"/>
                                 Edit user
                             </DropdownMenuItem>
-                        )}
+                        }
+                    >
+                        <AddUserDialog onSubmit={() => console.log('submit')}/>
+
                     </CustomModal>
 
 

@@ -1,13 +1,21 @@
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import List, Self, Optional, Tuple
 from beanie import PydanticObjectId, Document
 from fastapi import HTTPException
 from pydantic import BaseModel
 from pymongo import IndexModel
 
-from app.models.auth.model import MagicLink
 from app.models.role.model import RoleBase, Role
 
+
+
+class Activity(BaseModel):
+    payload: dict = {}
+    activity_date: datetime = datetime.now(UTC)
+
+
+class LoginActivity(Activity):
+    pass
 
 class Access(BaseModel):
     scopes: List[str] = []
@@ -15,8 +23,8 @@ class Access(BaseModel):
 
 
 class APIKey(Access):
-    id: PydanticObjectId
     client_id: str
+    hashed_client_secret: str
 
 
 class PSK(Access):
@@ -41,15 +49,14 @@ class UserBase(BaseModel):
     is_active: bool = True
     password_reset_code: str | None = None
     api_keys: List[APIKey] = []
-    roles: List[PydanticObjectId] = []  # This is a list of Role IDs
+    roles: List[PydanticObjectId] = [] # This is a list of Role IDs
+    last_login_activity: Optional[LoginActivity] = None
 
     # These properties are not serialized.
     _using_api_key: str | None = None
     """True when the current user has been authenticated via an API key instead of OAuth2. Not stored in DB."""
     _api_key: APIKey | None = None
     """If using_api_key is True, a valid reference to the API key that the user authenticated with."""
-
-    magic_links: List[MagicLink] = []
 
     def get_api_key(self, client_id: str) -> APIKey:
         api_key = [x for x in self.api_keys if x.client_id == client_id]
@@ -152,3 +159,9 @@ class User(Document, UserAuth):
         user_role_names: List = [role.name for role in user_roles]
         scopes: List = [f"{role.name}:{scope}" for role in user_roles for scope in role.scopes]
         return scopes, user_role_names
+
+    def log_login(self, payload: dict):
+        self.last_login_activity = LoginActivity(
+            activity_date=datetime.now(UTC),
+            payload=payload,
+        )

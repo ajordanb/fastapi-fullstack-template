@@ -1,19 +1,26 @@
 import os
 from typing import List
-import loguru
-from fastapi import APIRouter, Depends, HTTPException, Body, Form
 
+import loguru
+from fastapi import APIRouter, Depends, HTTPException, Body, Form, Request
+
+from app.api.v1.user.helpers import generate_email
 from app.core.config import settings
-from app.email_client import generate_reset_password_email, send_email, generate_magic_link_email
+from app.email_client import send_email
+from app.models.magic_link.model import MagicType, MagicLink
 from app.models.role.model import Role
-from app.api.v1.user.helpers import generate_magic_link
-from app.models.user.model import UserAuth, UpdatePassword, UserBase, APIKey, CreateAPIKey, UpdateAPIKey, User, UserOut
+from app.models.user.model import UserAuth, UpdatePassword, UserBase, APIKey, UpdateAPIKey, User, UserOut
 from app.core.security.api import (
-    get_hashed_password, verify_password, password_context, create_access_token,
+    get_hashed_password, verify_password, password_context,
     validate_link_token,
 )
 from app.models.util.model import Message
 from app.utills.dependencies import current_user, admin_access, CheckScope
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
 
 user_router = APIRouter(tags=["User Management"], prefix="/user")
 app_admin = Depends(admin_access)
@@ -124,7 +131,7 @@ async def update_my_user(
 
 @user_router.post("/api_key/create", dependencies=[app_admin, manage_users])
 async def create_api_key(
-        api_key: CreateAPIKey,
+        api_key: APIKey,
         email: str = Body(...),
 ) -> APIKey:
     """Create an API key for the specified user."""
@@ -174,42 +181,35 @@ async def delete_api_key(
 
 
 @user_router.post("/email_password_reset_link")
-async def recover_password(email: str) -> Message:
+@limiter.limit("5/minute")
+async def recover_password(request: Request, email: str) -> Message:
     user = await User.by_email(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if user.source.lower() == "basic":
-        random_text = os.urandom(16).hex()
-        scopes, user_role_names = await user.get_user_scopes_and_roles()
-        access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
-        email_data = generate_reset_password_email(reset_email=user.email, reset_code=random_text, token=access_token)
+    if user.source == "Basic" or user.password is not None:
+        await MagicLink.request_magic(identifier=user.id, _type=MagicType.recovery)
+        email_data = await generate_email(user, "recover_password")
         send_email(email=email_data)
-        user.password_reset_code = get_hashed_password(random_text)
-        await user.save()
     else:
         raise HTTPException(status_code=400, detail="User is not authenticated via password.")
     return Message(message="Password recovery email sent")
 
 
 @user_router.post("/send_magic_link")
-async def send_magic_link(email: str) -> Message:
+@limiter.limit("5/minute")
+async def send_magic_link(request: Request, email: str) -> Message:
     if not settings.magic_link_enabled:
         raise HTTPException(status_code=403, detail="Magic link disabled")
     user = await User.by_email(email)
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
-    if user.source.lower() == "basic":
-        magic = generate_magic_link(email=user.email)
-        scopes, user_role_names = await user.get_user_scopes_and_roles()
-        access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=user_role_names)
-        email_data = generate_magic_link_email(user_email=user.email, token=access_token)
+    if user.source.lower() == "basic" or user.password is not None:
+        await MagicLink.request_magic(identifier=user.id, _type=MagicType.magic)
+        email_data = await generate_email(user, "magic_link")
         send_email(email=email_data)
-        user.magic_links.append(magic)
-        await user.save()
     else:
         raise HTTPException(status_code=400, detail="User is not authenticated via password.")
     return Message(message="Magic link email sent")
-
 
 @user_router.post("/reset_password", dependencies=[])
 async def reset_password(

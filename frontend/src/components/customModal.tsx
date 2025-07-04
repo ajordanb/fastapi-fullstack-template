@@ -1,4 +1,4 @@
-import {type ReactNode, type FC} from "react";
+import {type ReactNode, type FC, ReactElement, cloneElement} from "react";
 import {MdAdd} from "react-icons/md";
 import {Tooltip} from "antd";
 import {Button} from "@/components/ui/button";
@@ -8,7 +8,8 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
-    DialogClose, DialogDescription
+    DialogClose,
+    DialogDescription
 } from "@/components/ui/dialog";
 import useModalContext from "@/hooks/useModal.tsx";
 
@@ -16,38 +17,44 @@ type CustomModalProps = {
     id: string;
     title: string;
     description?: string;
-    modalContent: ReactNode;
+    component?: ReactElement;
     width?: number | string;
-    children: ((openFn: () => void) => ReactNode) | ReactNode;
+    children: ReactNode;
 };
 
 const CustomModal: FC<CustomModalProps> = ({
-    id,
-    title,
-    description,
-    modalContent,
-    children,
-    width = 520
-}) => {
+                                               id,
+                                               title,
+                                               description,
+                                               component,
+                                               children,
+                                               width = 520
+                                           }) => {
     const {openModal, closeModal, isModalVisible} = useModalContext();
 
-    const handleOpen = () => openModal(id);
+    const handleOpen = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        openModal(id)
+    };
+
+    // Default to Add button if no component is provided
+    const defaultComponent = (
+        <Tooltip title="Add">
+            <Button variant="outline" size="icon">
+                <MdAdd className="h-4 w-4"/>
+            </Button>
+        </Tooltip>
+    );
+
+    const triggerComponent = cloneElement(component || defaultComponent, {
+        onClick: handleOpen,
+        className: `cursor-pointer ${(component || defaultComponent).props.className || ''}`
+    });
 
     return (
         <>
-            {typeof children === 'function' ? (
-                children(handleOpen)
-            ) : (
-                <Tooltip placement="topLeft" title={title}>
-                    <Button
-                        className="btn"
-                        onClick={handleOpen}
-                    >
-                        {children || <MdAdd />}
-                    </Button>
-                </Tooltip>
-            )}
-
+            {triggerComponent}
             <Dialog
                 open={isModalVisible(id)}
                 onOpenChange={(open) => {
@@ -63,7 +70,7 @@ const CustomModal: FC<CustomModalProps> = ({
                             </DialogDescription>
                         )}
                     </DialogHeader>
-                    {modalContent}
+                    {children}
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button onClick={() => closeModal(id)}>

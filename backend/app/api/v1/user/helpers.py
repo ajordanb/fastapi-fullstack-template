@@ -1,10 +1,8 @@
-from datetime import datetime, UTC, timedelta
-
 from fastapi import HTTPException
-
-from app.core.config import settings
-from app.models.auth.model import MagicLink
+from app.core.security.api import create_access_token
+from app.email_client import generate_magic_link_email, generate_reset_password_email
 from app.models.user.model import User
+from app.utills.util import generate_random_text
 
 
 async def validate_user_does_not_exist(email: str):
@@ -37,13 +35,15 @@ async def validate_user_state_for_verification(user: User):
         raise HTTPException(400, "Your account is disabled")
 
 
-def generate_magic_link(email: str)-> MagicLink:
-    dt = datetime.now(UTC)
-    return MagicLink(
-        identifier=email,
-        payload= {
-            "date_requested": dt.isoformat(),
-            "granted": True,
-            "expiry": (dt + timedelta(minutes=settings.email_reset_token_expire_minutes)).isoformat(),
-        }
-    )
+
+async def generate_email(user: User, type: str):
+    scopes, roles = await user.get_user_scopes_and_roles()
+    access_token, at_expires = create_access_token(subject=user.email, scopes=scopes, roles=roles)
+    if type == "magic_link":
+        return generate_magic_link_email(user_email=user.email, token=access_token)
+    elif type == "recover_password":
+        random_text = generate_random_text()
+        user.password_reset_code = random_text
+        await user.save()
+        return generate_reset_password_email(reset_email=user.email, reset_code=random_text, token=access_token)
+    return None

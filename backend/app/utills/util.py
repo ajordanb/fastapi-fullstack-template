@@ -1,10 +1,14 @@
 import asyncio
 import base64
 import functools
+import os
 
 from cryptography.fernet import Fernet
 from loguru import logger
 
+
+def generate_random_text(length: int = 16):
+    return os.urandom(length).hex()
 
 def convert_to_key(psk: str):
     repetitions = (32 // len(psk)) + 1

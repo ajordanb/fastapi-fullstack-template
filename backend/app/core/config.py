@@ -60,6 +60,7 @@ class Settings(BaseSettings):
     """The app master password"""
 
     google_client_id: str = "change_me"
+    magic_link_refresh_seconds: int = 60
 
     class Config:
         env_file = '.env'
