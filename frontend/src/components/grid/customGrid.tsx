@@ -8,13 +8,31 @@ import {
   ClientSideRowModelModule,
   ModuleRegistry,
   ColumnAutoSizeModule,
+  QuickFilterModule,
+  ValidationModule,
+  CellStyleModule,
+  SelectEditorModule,
+  TextFilterModule,
+  NumberFilterModule,
+  DateFilterModule,
+    PaginationModule,
+    RowSelectionModule
 } from "ag-grid-community";
 import { useTheme } from "@/hooks/useTheme";
 
 ModuleRegistry.registerModules([
+  QuickFilterModule,
   ClientSideRowModelModule,
   ClientSideRowModelApiModule,
   ColumnAutoSizeModule,
+  CellStyleModule,
+  SelectEditorModule,
+  TextFilterModule,
+  NumberFilterModule,
+  DateFilterModule,
+  RowSelectionModule,
+  PaginationModule,
+  ...(process.env.NODE_ENV !== "production" ? [ValidationModule] : []),
 ]);
 
 export interface CustomGridProps<T> {
@@ -69,11 +87,20 @@ function CustomGrid<T>({
     setInnerSearchText(searchText);
   }, [searchText]);
 
+  // Apply quick filter when search text changes - simple approach like official example
   useEffect(() => {
     if (gridApi && enableSearch) {
       gridApi.setGridOption('quickFilterText', innerSearchText);
     }
-  }, [innerSearchText, gridApi, enableSearch]);
+  }, [innerSearchText, enableSearch, gridApi]);
+
+  useEffect(() => {
+    return () => {
+      if (gridApi && (gridApi as any).resizeCleanup) {
+        (gridApi as any).resizeCleanup();
+      }
+    };
+  }, [gridApi]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,6 +116,23 @@ function CustomGrid<T>({
   const onGridReady = useCallback((params: GridReadyEvent) => {
     setGridApi(params.api);
     params.api.sizeColumnsToFit();
+    
+    // Add window resize listener
+    const handleResize = () => {
+      setTimeout(() => {
+        params.api.sizeColumnsToFit();
+      }, 100);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup function
+    const cleanup = () => {
+      window.removeEventListener('resize', handleResize);
+    };
+    
+    // Store cleanup function on the API for later use
+    (params.api as any).resizeCleanup = cleanup;
     
     if (propOnGridReady) {
       propOnGridReady(params);
@@ -106,6 +150,8 @@ function CustomGrid<T>({
     () => ({
       resizable: true,
       suppressMovable: true,
+      filter: true, // Enable filtering for all columns by default
+      floatingFilter: false, // Disable floating filters to avoid conflicts
       ...propDefaultColDef,
     }),
     [propDefaultColDef]
@@ -143,7 +189,7 @@ function CustomGrid<T>({
               </div>
             )}
             {enableSearch && (
-              <div className="relative w-64">
+              <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md">
                 <input
                   type="text"
                   placeholder="Search..."
@@ -172,10 +218,10 @@ function CustomGrid<T>({
           </div>
         </div>
       )}
-      <div style={{ height, width: "100%" }}>
+      <div style={{ height, width: "100%", minHeight: "400px" }} className="overflow-hidden">
         <AgGridReact
           theme={gridTheme}
-          modules={[ClientSideRowModelModule, ColumnAutoSizeModule]}
+          modules={[QuickFilterModule, ClientSideRowModelModule, ColumnAutoSizeModule, CellStyleModule, SelectEditorModule, TextFilterModule, NumberFilterModule, DateFilterModule]}
           columnDefs={columnDefs}
           rowData={rowData}
           defaultColDef={defaultColDef}
@@ -190,8 +236,10 @@ function CustomGrid<T>({
           loadingOverlayComponent="loadingOverlayComponent"
           loadingOverlayComponentParams={{ loadingMessage: "Loading data..." }}
           suppressRowVirtualisation={false}
+          suppressAnimationFrame={false}
           rowBuffer={10}
-          cacheQuickFilter={false}
+          cacheQuickFilter={true}
+          quickFilterText={innerSearchText}
         />
       </div>
     </div>

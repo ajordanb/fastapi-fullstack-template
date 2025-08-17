@@ -124,16 +124,26 @@ export const RolesBadge: React.FC<ICellRendererParams> = (params) => {
     const roles = params.value as UserRole[];
 
     if (!roles || roles.length === 0) {
-        return <span className="text-gray-400">No roles</span>;
+        return (
+            <span 
+                className="text-gray-400 cursor-pointer"
+                title="Click to edit roles"
+            >
+                No roles
+            </span>
+        );
     }
 
     return (
-        <div className="flex flex-wrap gap-1">
+        <div 
+            className="flex flex-wrap gap-1 justify-center items-center w-full cursor-pointer"
+            title="Click to edit roles"
+        >
             {roles.map((role) => (
                 <Badge
                     key={role.name}
                     variant="outline"
-                    className="bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+                    className="bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-50 flex-shrink-0"
                 >
                     {role.name}
                 </Badge>

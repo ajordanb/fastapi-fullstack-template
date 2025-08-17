@@ -1,6 +1,5 @@
-import {FcGoogle, FcLink} from "react-icons/fc";
+import {FcGoogle} from "react-icons/fc";
 import {Button} from "@/components/ui/button";
-import {Checkbox} from "@/components/ui/checkbox";
 import {Input} from "@/components/ui/input";
 import {useGoogleLogin} from "@react-oauth/google";
 import FormWrapper from "@/components/foms/formWrapper";
@@ -14,7 +13,7 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import {
-    createFileRoute, Link,
+    Link,
     useNavigate,
 } from "@tanstack/react-router";
 import {useAuth} from "@/hooks/useAuth";
@@ -23,15 +22,15 @@ import {useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type SignupFormValues = z.infer<typeof signupSchema>;
 
-const loginSchema = z.object({
+const signupSchema = z.object({
+    fullName: z.string().min(2, "Full name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
-    password: z.string().min(1, "Password is required"),
-    rememberMe: z.boolean(),
+    password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-interface LoginProps {
+interface SignupProps {
     heading?: string;
     subheading?: string;
     logo?: {
@@ -39,46 +38,46 @@ interface LoginProps {
         src: string;
         alt: string;
     };
-    loginText?: string;
-    googleText?: string;
     signupText?: string;
-    signupUrl?: string;
+    googleText?: string;
+    loginText?: string;
+    loginUrl?: string;
     redirectUrl?: string;
 }
 
-export const Login = ({
-                   heading = "Welcome Back",
-                   subheading = "Sign in to your account",
-                   loginText = "Sign In",
+export const Signup = ({
+                   heading = "Create Account",
+                   subheading = "Sign up for a new account",
+                   signupText = "Sign Up",
                    googleText = "Continue with Google",
-                   signupText = "Don't have an account?",
-                   signupUrl = "register",
+                   loginText = "Already have an account?",
+                   loginUrl = "/login",
                    redirectUrl = "/admin/users",
-               }: LoginProps) => {
+               }: SignupProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const {basicLogin, socialLogin, isAuthenticated} = useAuth();
+    const {register, socialLogin, isAuthenticated} = useAuth();
     const navigate = useNavigate();
 
-    const form = useForm<z.infer<typeof loginSchema>>({
-        resolver: zodResolver(loginSchema),
+    const form = useForm<z.infer<typeof signupSchema>>({
+        resolver: zodResolver(signupSchema),
         defaultValues: {
+            fullName: "",
             email: "",
             password: "",
-            rememberMe: false,
         },
     });
 
-    const onSubmit = async (values: LoginFormValues) => {
+    const onSubmit = async (values: SignupFormValues) => {
         setIsLoading(true);
         setError(null);
 
         try {
-            await basicLogin(values.email, values.password);
+            await register(values.fullName, values.email, values.password);
             _navigate();
         } catch (error: any) {
             console.log(error);
-            setError(error instanceof Error ? error.message : "Login failed");
+            setError(error instanceof Error ? error.message : "Signup failed");
         } finally {
             setIsLoading(false);
         }
@@ -92,7 +91,7 @@ export const Login = ({
                     await socialLogin({provider: "google", data: tokenResponse});
                     _navigate();
                 } catch (error) {
-                    setError("Google login failed, please try again.");
+                    setError("Google signup failed, please try again.");
                 } finally {
                     setIsLoading(false);
                 }
@@ -133,6 +132,26 @@ export const Login = ({
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                         control={form.control}
+                        name="fullName"
+                        render={({field}) => (
+                            <FormItem>
+                                <FormLabel className="text-gray-700 font-medium">Full Name</FormLabel>
+                                <FormControl>
+                                    <Input
+                                        type="text"
+                                        placeholder="Enter your full name"
+                                        disabled={isLoading}
+                                        className="bg-white border-gray-300 text-black placeholder:text-gray-400 focus:border-black focus:ring-1 focus:ring-black"
+                                        {...field}
+                                    />
+                                </FormControl>
+                                <FormMessage className="text-red-600" />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
                         name="email"
                         render={({field}) => (
                             <FormItem>
@@ -171,45 +190,13 @@ export const Login = ({
                         )}
                     />
 
-                    <div className="flex justify-between items-center">
-                        <FormField
-                            control={form.control}
-                            name="rememberMe"
-                            render={({field}) => (
-                                <FormItem className="flex items-center space-x-2">
-                                    <FormControl>
-                                        <Checkbox
-                                            id="remember"
-                                            className="border-gray-300 data-[state=checked]:bg-black data-[state=checked]:border-black"
-                                            checked={field.value}
-                                            onCheckedChange={field.onChange}
-                                            disabled={isLoading}
-                                        />
-                                    </FormControl>
-                                    <FormLabel
-                                        htmlFor="remember"
-                                        className="text-sm text-gray-700 font-medium cursor-pointer"
-                                    >
-                                        Remember me
-                                    </FormLabel>
-                                </FormItem>
-                            )}
-                        />
-                        <Link
-                            to={'/requestNewPassword'}
-                            className="text-sm text-gray-600 hover:text-black hover:underline"
-                        >
-                            Forgot password?
-                        </Link>
-                    </div>
-
                     <Button
                         type="submit"
                         className="w-full bg-black hover:bg-gray-800 text-white font-semibold transition-colors duration-200"
                         disabled={isLoading}
                         size="lg"
                     >
-                        {isLoading ? "Signing in..." : loginText}
+                        {isLoading ? "Creating account..." : signupText}
                     </Button>
 
                     <div className="relative">
@@ -220,20 +207,6 @@ export const Login = ({
                             <span className="bg-white px-2 text-gray-500">Or continue with</span>
                         </div>
                     </div>
-
-                    <Button
-                        variant="outline"
-                        className="w-full bg-white border border-gray-300 text-black hover:bg-gray-50 transition-colors duration-200"
-                        disabled={isLoading}
-                        onClick={() => {
-                            _navigate("/requestMagicLink")
-                        }}
-                        type="button"
-                        size="lg"
-                    >
-                        <FcLink className="mr-2 size-5"/>
-                        Magic Link
-                    </Button>
 
                     <Button
                         variant="outline"
@@ -251,13 +224,13 @@ export const Login = ({
 
                     <div className="mt-6 text-center">
                         <p className="text-gray-600">
-                            {signupText}{" "}
-                            <a
-                                href={signupUrl}
+                            {loginText}{" "}
+                            <Link
+                                to={loginUrl}
                                 className="font-medium text-black hover:text-gray-700 hover:underline"
                             >
-                                Sign up
-                            </a>
+                                Sign in
+                            </Link>
                         </p>
                     </div>
                 </form>
@@ -265,4 +238,3 @@ export const Login = ({
         </FormWrapper>
     );
 };
-

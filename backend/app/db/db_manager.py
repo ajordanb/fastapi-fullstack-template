@@ -1,5 +1,4 @@
-
-
+import asyncio
 import motor.motor_asyncio
 from beanie import Document, init_beanie
 from loguru import logger
@@ -14,10 +13,6 @@ from app.models.user.model import User
 
 class DBManager:
     _client: AsyncIOMotorClient
-
-    def __init__(self):
-        pass
-
     async def init_db(self, client=None):
         """Initialize the database."""
         if client is None:

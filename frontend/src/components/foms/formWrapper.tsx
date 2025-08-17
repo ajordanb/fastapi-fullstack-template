@@ -29,13 +29,12 @@ export function FormWrapper({
   onErrorDismiss
 }: FormWrapperProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-      <div className="absolute inset-0"></div>
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
+    <div className="min-h-screen bg-gray-50">
+      <div className="flex flex-col items-center justify-center min-h-screen px-4">
         <div className="w-full max-w-md mx-auto">
           <div className="text-center mb-8">
             <div className="mb-6 flex justify-center">
-              <div className="p-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl shadow-2xl">
+              <div className="p-4 bg-black rounded-2xl shadow-lg">
                 {logo?.src ? (
                   <img
                     src={logo.src}
@@ -49,35 +48,35 @@ export function FormWrapper({
             </div>
 
             <div className="mb-4">
-              <Badge variant="secondary" className="bg-slate-800/50 text-slate-300 border-slate-600 px-3 py-1 text-xs">
+              <Badge variant="secondary" className="bg-gray-100 text-gray-600 border-gray-300 px-3 py-1 text-xs">
                 Secure Form
               </Badge>
             </div>
 
             {heading && (
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                 {heading}
               </h1>
             )}
             {subheading && (
-              <p className="text-lg text-slate-300">
+              <p className="text-lg text-gray-600">
                 {subheading}
               </p>
             )}
           </div>
 
-          <Card className="bg-slate-800/30 border-slate-700/50 backdrop-blur-sm shadow-2xl">
+          <Card className="bg-white border-gray-200 shadow-lg">
             <CardHeader className="space-y-1 pb-4">
               {error && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <p className="text-red-400 text-sm">{error}</p>
+                    <p className="text-red-600 text-sm">{error}</p>
                     {onErrorDismiss && (
                       <Button
                         onClick={onErrorDismiss}
                         variant="ghost"
                         size="sm"
-                        className="h-5 w-5 p-0 text-red-400 hover:text-red-300 hover:bg-red-500/20"
+                        className="h-5 w-5 p-0 text-red-600 hover:text-red-700 hover:bg-red-100"
                         aria-label="Dismiss error"
                       >
                         <X className="h-3 w-3" />
@@ -91,8 +90,8 @@ export function FormWrapper({
             <CardContent className="space-y-4">
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                  <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-slate-300 text-sm">Loading...</p>
+                  <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-gray-600 text-sm">Loading...</p>
                 </div>
               ) : (
                 <div className="min-h-[120px]">
@@ -105,7 +104,7 @@ export function FormWrapper({
           <div className="mt-6 text-center">
             <Link
               to="/"
-              className="text-sm text-slate-500 hover:text-slate-400 hover:underline"
+              className="text-sm text-gray-500 hover:text-gray-600 hover:underline"
             >
               ← Back to home
             </Link>

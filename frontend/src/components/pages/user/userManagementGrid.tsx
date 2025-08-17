@@ -1,4 +1,4 @@
-import React, {useState, useCallback, useMemo} from "react";
+import React, {useState, useCallback, useMemo, useEffect} from "react";
 import CustomGrid from "@/components/grid/customGrid.tsx";
 import {
     type ColDef,
@@ -28,7 +28,8 @@ import {useToast} from "@/hooks/useToast.tsx";
 
 const UserManagementExample: React.FC = () => {
     const [searchText, setSearchText] = useState("");
-    const {setLoading } = useToast();
+    const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+    const {setLoading} = useToast();
 
     const api = useApi()
     const {data: users, refetch, isLoading, isFetching} = api.user.useAllUsersQuery();
@@ -36,76 +37,87 @@ const UserManagementExample: React.FC = () => {
         refetch();
     }, [refetch]);
 
+    useEffect(() => {
+        const handleResize = () => {
+            setWindowWidth(window.innerWidth);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const columnDefs = useMemo<ColDef[]>(
         () => [
             {
-                headerName: "User Information",
-                children: [
-                    {
-                        field: "name",
-                        headerName: "Name",
-                        sortable: true,
-                        filter: true,
-                    },
-                    {
-                        field: "username",
-                        headerName: "Username",
-                        sortable: true,
-                        filter: true,
-                    },
-                    {
-                        field: "email",
-                        headerName: "Email",
-                        sortable: true,
-                        filter: true,
-                    },
-                ],
+                field: "name",
+                headerName: "Name",
+                sortable: true,
+                filter: true,
+                minWidth: 120,
+                flex: 1,
             },
-            {
-                headerName: "Status",
-                children: [
-                    {
-                        field: "is_active",
-                        headerName: "Status",
-                        sortable: true,
-                        filter: true,
-                        cellRenderer: StatusBadge,
-                    },
-                    {
-                        field: "email_confirmed",
-                        headerName: "Email Status",
-                        sortable: true,
-                        filter: true,
-                        cellRenderer: EmailConfirmationBadge,
-                    },
-                    {
-                        field: "source",
-                        headerName: "Source",
-                        sortable: true,
-                        filter: true,
-                        cellRenderer: SourceBadge,
-                    },
-                ],
-            },
-            {
-                headerName: "Access Control",
-                children: [
-                    {
-                        field: "roles",
-                        headerName: "Roles",
-                        sortable: false,
-                        filter: false,
-                        cellRenderer: RolesBadge,
-                    },
-                    {
-                        field: "api_keys",
-                        headerName: "API Keys",
-                        sortable: false,
-                        filter: false,
-                        cellRenderer: ApiKeysBadge,
-                    },
 
-                ],
+            {
+                field: "email",
+                headerName: "Email",
+                sortable: true,
+                filter: true,
+                minWidth: 180,
+                flex: 2,
+            },
+            {
+                field: "is_active",
+                headerName: "Status",
+                sortable: true,
+                filter: true,
+                cellRenderer: StatusBadge,
+                width: 100,
+                flex: 0,
+            },
+            {
+                field: "email_confirmed",
+                headerName: "Email Status",
+                sortable: true,
+                filter: true,
+                cellRenderer: EmailConfirmationBadge,
+                width: 120,
+                flex: 0,
+                hide: windowWidth < 1024,
+            },
+            {
+                field: "source",
+                headerName: "Source",
+                sortable: true,
+                filter: true,
+                cellRenderer: SourceBadge,
+                width: 100,
+                flex: 0,
+                hide: windowWidth < 1024,
+            },
+            {
+                field: "roles",
+                headerName: "Roles",
+                sortable: false,
+                filter: false,
+                cellRenderer: RolesBadge,
+                cellEditor: 'agSelectCellEditor',
+                cellEditorParams: {
+                    values: ['admin', 'user', 'manager', 'editor', 'viewer'],
+                },
+                editable: true,
+                minWidth: 120,
+                flex: 1,
+                hide: windowWidth < 768,
+                cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+            },
+            {
+                field: "api_keys",
+                headerName: "API Keys",
+                sortable: false,
+                filter: false,
+                cellRenderer: ApiKeysBadge,
+                width: 100,
+                flex: 0,
+                hide: windowWidth < 1024,
             },
             {
                 field: "actions",
@@ -113,17 +125,18 @@ const UserManagementExample: React.FC = () => {
                 sortable: false,
                 filter: false,
                 cellRenderer: ActionButtons,
-                pinned: "right",
+                width: 120,
+                flex: 0,
+                pinned: 'right',
             },
-
         ],
-        []
+        [windowWidth]
     );
 
     setLoading("Loading user data", isLoading)
 
     return (
- <Card className="shadow-sm border-0">
+        <Card className="shadow-sm border-0">
             <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                     <div>
@@ -169,7 +182,7 @@ const UserManagementExample: React.FC = () => {
                 <CustomGrid
                     rowData={users ? users : []}
                     columnDefs={columnDefs}
-                    height="600px"
+                    height="calc(100vh - 300px)"
                     searchText={searchText}
                     onSearchChange={setSearchText}
                     enableSearch={true}

@@ -1,7 +1,5 @@
-import os
 from typing import List
 
-import loguru
 from fastapi import APIRouter, Depends, HTTPException, Body, Form, Request
 
 from app.api.v1.user.helpers import generate_email
@@ -11,11 +9,12 @@ from app.models.magic_link.model import MagicType, MagicLink
 from app.models.role.model import Role
 from app.models.user.model import UserAuth, UpdatePassword, UserBase, APIKey, UpdateAPIKey, User, UserOut
 from app.core.security.api import (
-    get_hashed_password, verify_password, password_context,
-    validate_link_token,
+    get_hashed_password, password_context,
 )
 from app.models.util.model import Message
-from app.utills.dependencies import current_user, admin_access, CheckScope
+from app.services.user.user_service import  SelfUserService, UserService
+from app.utills.dependencies import current_user, admin_access, CheckScope, get_user_service, get_self_user_service, \
+    validate_link_token
 
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -28,20 +27,19 @@ manage_users = Depends(CheckScope("users.write"))
 
 
 @user_router.post("/all", dependencies=[app_admin, manage_users])
-async def get_all_users() -> List[UserOut]:
+async def get_all_users(
+        skip: int = 0,
+        limit: int = 1000,
+user_service: UserService = Depends(get_user_service)
+
+) -> List[UserOut]:
     """Admin endpoint to get all users"""
-    response: List[UserOut] = []
-    users = await User.all_users()
-    for user in users:
-        user_roles = await user.user_roles()
-        response.append(UserOut(**user.model_dump(exclude={'roles'}), roles=user_roles))
-    return response
+    return await user_service.get_all_users(skip, limit)
 
 
 @user_router.post("/register", dependencies=[manage_users, app_admin])
 async def create_user(
         user_register: UserAuth,
-
 ):
     """Admin endpoint to create a new user"""
     if _ := await User.by_email(user_register.email):
@@ -58,34 +56,27 @@ async def create_user(
     hashed_password = get_hashed_password(user_register.password)
     user_register.password = hashed_password
     new_user = User(**user_register.model_dump())
+    email_data = await generate_email(new_user, "welcome")
+    send_email(email=email_data)
     await User.insert(new_user)
     return UserBase(**new_user.model_dump())
 
 
 @user_router.post("/me")
 async def profile(
-        me: User = Depends(current_user)
+        me: SelfUserService = Depends(get_self_user_service)
 ) -> UserBase:
     """Retrieve current user's metadata"""
-    return me
+    return await me.my_profile()
 
 
 @user_router.post("/me/update_password")
 async def update_password(
         body: UpdatePassword,
-        me: User = Depends(current_user),
+        me: SelfUserService = Depends(get_self_user_service),
 ) -> Message:
     """Update password endpoint"""
-    if not verify_password(body.password, me.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect password")
-    if body.current_password == body.new_password:
-        raise HTTPException(
-            status_code=400, detail="New password cannot be the same as the current one"
-        )
-    hashed_password = get_hashed_password(body.new_password)
-    me.password = hashed_password
-    await me.save()
-    return Message(message="Password updated successfully")
+    return await me.update_my_password(body.current_password, body.new_password)
 
 
 @user_router.post("/by_id", dependencies=[app_admin, manage_users])
@@ -211,23 +202,19 @@ async def send_magic_link(request: Request, email: str) -> Message:
         raise HTTPException(status_code=400, detail="User is not authenticated via password.")
     return Message(message="Magic link email sent")
 
+
 @user_router.post("/reset_password", dependencies=[])
 async def reset_password(
         email: str = Form(...),
-        password_reset_code: str = Form(...),
         new_password: str = Form(...),
-        token = Depends(validate_link_token)
+        token=Depends(validate_link_token)
 ) -> Message:
     user = await User.by_email(email)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    loguru.logger.debug(f"Password reset request for {email} {password_reset_code}")
     if user.source == "Basic":
-        if not verify_password(password_reset_code, user.reset_code):
-            raise HTTPException(status_code=401, detail="Incorrect password")
         hashed_password = get_hashed_password(new_password)
         user.password = hashed_password
-        user.password_reset_code = None
         await user.save()
         return Message.success("Password reset successfully.")
     else:

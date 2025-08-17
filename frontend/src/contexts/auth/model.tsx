@@ -12,6 +12,7 @@ export interface AuthContextType {
   currentUser: string | null;
   socialLogin: (params: SocialLoginParams) => Promise<void>;
   basicLogin: (email: string, password: string) => Promise<void>;
+  register: (name: string,email: string, password: string) => Promise<void>;
   logout: () => void;
   hasRole: (requiredRoles: string | string[]) => boolean;
   hasScope: (requiredScopes: string | string[]) => boolean;

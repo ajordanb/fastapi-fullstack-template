@@ -15,74 +15,74 @@ code {
 }
 
 :root {
-  --background: oklch(0.98 0.002 240);
-  --foreground: oklch(0.15 0.01 240);
-  --card: oklch(0.95 0.005 240);
-  --card-foreground: oklch(0.15 0.01 240);
-  --popover: oklch(0.98 0.002 240);
-  --popover-foreground: oklch(0.15 0.01 240);
-  --primary: oklch(0.5 0.15 240);
-  --primary-foreground: oklch(0.98 0.002 240);
-  --secondary: oklch(0.9 0.01 240);
-  --secondary-foreground: oklch(0.15 0.01 240);
-  --muted: oklch(0.9 0.01 240);
-  --muted-foreground: oklch(0.5 0.02 240);
-  --accent: oklch(0.6 0.12 190);
-  --accent-foreground: oklch(0.98 0.002 240);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.98 0.002 240);
-  --border: oklch(0.85 0.01 240);
-  --input: oklch(0.9 0.01 240);
-  --ring: oklch(0.5 0.15 240);
-  --chart-1: oklch(0.5 0.15 240);
-  --chart-2: oklch(0.6 0.12 190);
-  --chart-3: oklch(0.4 0.1 220);
-  --chart-4: oklch(0.7 0.1 200);
-  --chart-5: oklch(0.55 0.12 210);
-  --radius: 0.75rem;
-  --sidebar: oklch(0.95 0.005 240);
-  --sidebar-foreground: oklch(0.15 0.01 240);
-  --sidebar-primary: oklch(0.5 0.15 240);
-  --sidebar-primary-foreground: oklch(0.98 0.002 240);
-  --sidebar-accent: oklch(0.9 0.01 240);
-  --sidebar-accent-foreground: oklch(0.15 0.01 240);
-  --sidebar-border: oklch(0.85 0.01 240);
-  --sidebar-ring: oklch(0.5 0.15 240);
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-foreground: #ffffff;
+  --secondary: #f8f9fa;
+  --secondary-foreground: #374151;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #f3f4f6;
+  --accent-foreground: #000000;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #d1d5db;
+  --input: #ffffff;
+  --ring: #000000;
+  --chart-1: #000000;
+  --chart-2: #374151;
+  --chart-3: #6b7280;
+  --chart-4: #9ca3af;
+  --chart-5: #d1d5db;
+  --radius: 0.5rem;
+  --sidebar: #f8f9fa;
+  --sidebar-foreground: #000000;
+  --sidebar-primary: #000000;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f6;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #d1d5db;
+  --sidebar-ring: #000000;
 }
 
 .dark {
-  --background: oklch(0.08 0.015 240);
-  --foreground: oklch(0.95 0.005 240);
-  --card: oklch(0.12 0.02 240);
-  --card-foreground: oklch(0.95 0.005 240);
-  --popover: oklch(0.1 0.02 240);
-  --popover-foreground: oklch(0.95 0.005 240);
-  --primary: oklch(0.55 0.15 240);
-  --primary-foreground: oklch(0.05 0.01 240);
-  --secondary: oklch(0.2 0.02 240);
-  --secondary-foreground: oklch(0.9 0.005 240);
-  --muted: oklch(0.18 0.02 240);
-  --muted-foreground: oklch(0.65 0.01 240);
-  --accent: oklch(0.6 0.12 190);
-  --accent-foreground: oklch(0.05 0.01 240);
-  --destructive: oklch(0.5 0.2 25);
-  --destructive-foreground: oklch(0.95 0.005 240);
-  --border: oklch(0.2 0.02 240);
-  --input: oklch(0.15 0.02 240);
-  --ring: oklch(0.55 0.15 240);
-  --chart-1: oklch(0.55 0.15 240);
-  --chart-2: oklch(0.6 0.12 190);
-  --chart-3: oklch(0.45 0.1 220);
-  --chart-4: oklch(0.7 0.1 200);
-  --chart-5: oklch(0.5 0.12 210);
-  --sidebar: oklch(0.1 0.02 240);
-  --sidebar-foreground: oklch(0.95 0.005 240);
-  --sidebar-primary: oklch(0.55 0.15 240);
-  --sidebar-primary-foreground: oklch(0.05 0.01 240);
-  --sidebar-accent: oklch(0.2 0.02 240);
-  --sidebar-accent-foreground: oklch(0.9 0.005 240);
-  --sidebar-border: oklch(0.2 0.02 240);
-  --sidebar-ring: oklch(0.55 0.15 240);
+  --background: #111827;
+  --foreground: #f9fafb;
+  --card: #1f2937;
+  --card-foreground: #f9fafb;
+  --popover: #1f2937;
+  --popover-foreground: #f9fafb;
+  --primary: #f9fafb;
+  --primary-foreground: #111827;
+  --secondary: #374151;
+  --secondary-foreground: #f3f4f6;
+  --muted: #374151;
+  --muted-foreground: #9ca3af;
+  --accent: #374151;
+  --accent-foreground: #f9fafb;
+  --destructive: #ef4444;
+  --destructive-foreground: #f9fafb;
+  --border: #374151;
+  --input: #1f2937;
+  --ring: #f9fafb;
+  --chart-1: #f9fafb;
+  --chart-2: #d1d5db;
+  --chart-3: #9ca3af;
+  --chart-4: #6b7280;
+  --chart-5: #374151;
+  --sidebar: #1f2937;
+  --sidebar-foreground: #f9fafb;
+  --sidebar-primary: #f9fafb;
+  --sidebar-primary-foreground: #111827;
+  --sidebar-accent: #374151;
+  --sidebar-accent-foreground: #f3f4f6;
+  --sidebar-border: #374151;
+  --sidebar-ring: #f9fafb;
 }
 
 @theme inline {
@@ -133,17 +133,71 @@ code {
   }
 
   .bg-gradient-blue {
-    background: linear-gradient(135deg, oklch(0.55 0.15 240), oklch(0.6 0.12 190));
+    background: linear-gradient(135deg, #000000, #374151);
   }
 
   .text-gradient-blue {
-    background: linear-gradient(135deg, oklch(0.55 0.15 240), oklch(0.6 0.12 190));
+    background: linear-gradient(135deg, #000000, #374151);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
+  
   .focus-blue:focus {
-    outline: 2px solid oklch(0.55 0.15 240);
+    outline: 2px solid #000000;
     outline-offset: 2px;
+  }
+
+  /* Form-specific styles matching the new design */
+  .form-input {
+    @apply bg-white border-gray-300 text-black placeholder:text-gray-400;
+  }
+  
+  .form-input:focus {
+    @apply border-black ring-1 ring-black;
+  }
+  
+  .form-button-primary {
+    @apply bg-black hover:bg-gray-800 text-white font-semibold transition-colors duration-200;
+  }
+  
+  .form-button-secondary {
+    @apply bg-white border border-gray-300 text-black hover:bg-gray-50 transition-colors duration-200;
+  }
+  
+  .form-wrapper-background {
+    @apply bg-gray-50;
+  }
+  
+  .form-card {
+    @apply bg-white border border-gray-200 shadow-lg;
+  }
+  
+  .form-header-icon {
+    @apply bg-black text-white;
+  }
+  
+  .form-text-primary {
+    @apply text-gray-900;
+  }
+  
+  .form-text-secondary {
+    @apply text-gray-600;
+  }
+  
+  .form-label {
+    @apply text-gray-700 font-medium;
+  }
+  
+  .form-error {
+    @apply text-red-600;
+  }
+  
+  .form-error-bg {
+    @apply bg-red-50 border border-red-200;
+  }
+  
+  .form-loading-spinner {
+    @apply border-black border-t-transparent;
   }
 }

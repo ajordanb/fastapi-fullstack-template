@@ -2,33 +2,66 @@ from typing import TypeVar
 from fastapi import HTTPException, Depends
 from starlette import status
 
-from app.core.security.api import valid_access_token
-from app.models.auth.model import Token
+from app.core.security.api import reuseable_oauth
+from app.models.auth.model import Token, Policy, RefreshTokenReq
 from app.models.role.model import Role
 from app.models.user.model import User
+from app.services.auth.auth_service import SecurityService, AuthService
+from app.services.email.email import EmailService, get_email_service
+from app.services.user.user_service import UserService, SelfUserService
 
 T = TypeVar('T')
 
 
+def get_user_service(
+        email_service: EmailService = Depends(get_email_service)
+):
+    return UserService(email_service)
+
+
+def get_security_service() -> SecurityService:
+    return SecurityService(password_policy=Policy())
+
+
+def get_auth_service(security_service=Depends(get_security_service)) -> AuthService:
+    return AuthService(security_service)
+
+
+def valid_token(token: str,
+                security_service: SecurityService = Depends(get_security_service)
+                ):
+    return security_service.validate_access_token(token)
+
+
+def valid_access_token(token: str = Depends(reuseable_oauth),
+                       security_service: SecurityService = Depends(get_security_service)
+                       ):
+    return security_service.validate_access_token(token)
+
+
+def validate_refresh_token(req: RefreshTokenReq,
+                           ) -> Token:
+    return valid_token(req.refreshToken)
+
+
+def validate_link_token(token: str) -> Token:
+    if token.startswith("Bearer "):
+        token = token[7:]
+    return valid_token(token)
+
+
 async def current_user(
         token: Token = Depends(valid_access_token),
+        user_service=Depends(get_user_service)
 ) -> User:
     """Access the current user. If a token is not provided it will fall back on API key."""
     if not token:
         raise HTTPException(401, "Not authenticated.")
-    user = await User.by_email(token.sub)
-    if token.client_id:
-        api_key = user.get_api_key(token.client_id)
-        if not api_key.active:
-            raise HTTPException(401, "API key disabled")
-        user._using_api_key = True
-        user._api_key = api_key
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Could not find user",
-        )
-    return user
+    return await user_service.current_user(token)
+
+
+def get_self_user_service(me: User = Depends(current_user)):
+    return SelfUserService(me)
 
 
 async def admin_access(user: User = Depends(current_user)) -> User:
@@ -54,7 +87,8 @@ class CheckScope:
         else:
             user_roles = await user.user_roles()
             if not user_roles:
-                raise HTTPException(status_code=403, detail="User is not authorized to access, or does not contain any roles")
+                raise HTTPException(status_code=403,
+                                    detail="User is not authorized to access, or does not contain any roles")
             all_roles: dict[str, Role] = {r.name: r for r in (await Role.all().to_list())}
             for role in user_roles:
                 if role.name == "admin":

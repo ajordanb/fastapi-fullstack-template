@@ -17,6 +17,7 @@ import { Route as ValidateMagicLinkImport } from './routes/validateMagicLink'
 import { Route as UnauthorizedImport } from './routes/unauthorized'
 import { Route as RequestNewPasswordImport } from './routes/requestNewPassword'
 import { Route as RequestMagicLinkImport } from './routes/requestMagicLink'
+import { Route as RegisterImport } from './routes/register'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
@@ -53,6 +54,12 @@ const RequestNewPasswordRoute = RequestNewPasswordImport.update({
 const RequestMagicLinkRoute = RequestMagicLinkImport.update({
   id: '/requestMagicLink',
   path: '/requestMagicLink',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const RegisterRoute = RegisterImport.update({
+  id: '/register',
+  path: '/register',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -133,6 +140,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginImport
+      parentRoute: typeof rootRoute
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterImport
       parentRoute: typeof rootRoute
     }
     '/requestMagicLink': {
@@ -254,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/requestMagicLink': typeof RequestMagicLinkRoute
   '/requestNewPassword': typeof RequestNewPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -268,6 +283,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/requestMagicLink': typeof RequestMagicLinkRoute
   '/requestNewPassword': typeof RequestNewPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -283,6 +299,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/requestMagicLink': typeof RequestMagicLinkRoute
   '/requestNewPassword': typeof RequestNewPasswordRoute
   '/unauthorized': typeof UnauthorizedRoute
@@ -301,6 +318,7 @@ export interface FileRouteTypes {
     | '/'
     | ''
     | '/login'
+    | '/register'
     | '/requestMagicLink'
     | '/requestNewPassword'
     | '/unauthorized'
@@ -314,6 +332,7 @@ export interface FileRouteTypes {
     | '/'
     | ''
     | '/login'
+    | '/register'
     | '/requestMagicLink'
     | '/requestNewPassword'
     | '/unauthorized'
@@ -327,6 +346,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/login'
+    | '/register'
     | '/requestMagicLink'
     | '/requestNewPassword'
     | '/unauthorized'
@@ -344,6 +364,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
   RequestMagicLinkRoute: typeof RequestMagicLinkRoute
   RequestNewPasswordRoute: typeof RequestNewPasswordRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
@@ -354,6 +375,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
   RequestMagicLinkRoute: RequestMagicLinkRoute,
   RequestNewPasswordRoute: RequestNewPasswordRoute,
   UnauthorizedRoute: UnauthorizedRoute,
@@ -373,6 +395,7 @@ export const routeTree = rootRoute
         "/",
         "/_authenticated",
         "/login",
+        "/register",
         "/requestMagicLink",
         "/requestNewPassword",
         "/unauthorized",
@@ -391,6 +414,9 @@ export const routeTree = rootRoute
     },
     "/login": {
       "filePath": "login.tsx"
+    },
+    "/register": {
+      "filePath": "register.tsx"
     },
     "/requestMagicLink": {
       "filePath": "requestMagicLink.tsx"

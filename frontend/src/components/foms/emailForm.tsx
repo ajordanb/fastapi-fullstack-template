@@ -112,22 +112,22 @@ export function EmailActionForm({
             {feedback ? (
                 <div className="text-center space-y-4">
                     <div className="flex justify-center">
-                        <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full shadow-lg">
+                        <div className="p-3 bg-green-500 rounded-full shadow-lg">
                             <CheckCircle className="h-8 w-8 text-white"/>
                         </div>
                     </div>
-                    <h3 className="text-lg font-semibold text-white">{successTitle}</h3>
-                    <p className="text-slate-300">{getFeedbackMessage()}</p>
+                    <h3 className="text-lg font-semibold text-gray-900">{successTitle}</h3>
+                    <p className="text-gray-600">{getFeedbackMessage()}</p>
 
                     {isActive && timeLeft > 0 && (
-                        <div className="text-xl font-mono text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                        <div className="text-xl font-mono text-black bg-gray-100 border border-gray-300 rounded-lg p-3">
                             {timeLeft}s
                         </div>
                     )}
 
                     <Button
                         onClick={handleReset}
-                        className="mt-4 w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                        className="mt-4 w-full bg-black hover:bg-gray-800 text-white font-semibold shadow-lg transition-all duration-200"
                         disabled={isActive && timeLeft > 0}
                         size="lg"
                     >
@@ -148,18 +148,18 @@ export function EmailActionForm({
                                             type="email"
                                             placeholder={placeholder}
                                             disabled={isLoading}
-                                            className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500"
+                                            className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-black"
                                             {...field}
                                         />
                                     </FormControl>
-                                    <FormMessage className="text-red-400"/>
+                                    <FormMessage className="text-red-600"/>
                                 </FormItem>
                             )}
                         />
                         {additionalContent}
                         <Button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold shadow-lg hover:shadow-xl transform transition-all duration-200"
+                            className="w-full bg-black hover:bg-gray-800 text-white font-semibold shadow-lg transition-all duration-200"
                             disabled={isLoading}
                             size="lg"
                         >
@@ -177,7 +177,7 @@ export function EmailActionForm({
                         </Button>
                         <Button
                             variant="outline"
-                            className="w-full bg-slate-700/50 border-slate-600 text-white hover:bg-slate-600/50 transition-all duration-200"
+                            className="w-full bg-white border-gray-300 text-gray-700 hover:bg-gray-50 transition-all duration-200"
                             disabled={isLoading}
                             onClick={() => navigate({to: "/login"})}
                             type="button"

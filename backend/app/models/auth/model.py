@@ -54,6 +54,7 @@ class Token(BaseModel):
     exp: int
     domain: Optional[dict] = None
     client_id: Optional[str] = None
+    iat: datetime
 
     @property
     def expiration_date(self) -> datetime:
@@ -61,3 +62,14 @@ class Token(BaseModel):
 
     def is_expired(self, as_of=None):
         return self.expiration_date < (as_of or datetime.now())
+
+
+class RefreshTokenReq(BaseModel):
+    refreshToken: str
+
+
+class Policy(BaseModel):
+    length: int = 8
+    uppercase: int = 1
+    numbers: int = 1
+    nonletters: int = 1

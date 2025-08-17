@@ -25,30 +25,6 @@ if settings.mount_point:
 else:
     reuseable_oauth = OAuth2PasswordBearer(tokenUrl=f"/auth/token", scheme_name="JWT", auto_error=False)
 
-token_expired_exception = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Token expired",
-    headers={"WWW-Authenticate": "Bearer"},
-)
-
-invalid_credentials_exception = HTTPException(
-    status_code=status.HTTP_403_FORBIDDEN,
-    detail="Could not validate credentials",
-    headers={"WWW-Authenticate": "Bearer"},
-)
-
-invalid_token_format_exception = HTTPException(
-    status_code=status.HTTP_403_FORBIDDEN,
-    detail="Invalid token format",
-    headers={"WWW-Authenticate": "Bearer"},
-)
-
-policy = PasswordPolicy.from_names(
-    length=8,  # min length: 8
-    uppercase=1,  # need min. 2 uppercase letters
-    numbers=1,  # need min. 2 digits
-    nonletters=1,  # need min. 2 special characters
-)
 
 
 class CustomOAuth2RequestForm:
@@ -69,54 +45,6 @@ class CustomOAuth2RequestForm:
         self.payload = payload or {}
 
 
-def _validate_token(token: str, key: str, token_type: TokenType = TokenType.jwt):
-    match token_type:
-        case TokenType.jwt:
-            return jwt.decode(
-                token, key, algorithms=[ALGORITHM], options={"verify_exp": False}
-            )
-        case TokenType.psk:
-            return jwt.decode(token, key, algorithms=[ALGORITHM])
-        case _:
-            raise invalid_credentials_exception
-
-
-def validate_token(token: str, key: str) -> Token:
-    try:
-        raw_jwt_payload = _validate_token(token, key, TokenType.jwt)
-        token_data: Token = Token.model_validate(raw_jwt_payload)
-        if token_data.is_expired():
-            print("Expired Token")
-            raise token_expired_exception
-    except jwt.PyJWTError:
-        print("Invalid credentials")
-        raise invalid_credentials_exception
-    except ValidationError:
-        print("Invalid token format")
-        raise invalid_token_format_exception
-
-    return token_data
-
-
-class RefreshTokenReq(BaseModel):
-    refreshToken: str
-
-
-def validate_refresh_token(req: RefreshTokenReq) -> Token:
-    return validate_token(req.refreshToken, JWT_REFRESH_SECRET_KEY)
-
-
-def validate_link_token(token: str) -> Token:
-    if token.startswith("Bearer "):
-        token = token[7:]
-    return validate_token(token, JWT_SECRET_KEY)
-
-
-def valid_access_token(token: str = Depends(reuseable_oauth)) -> Token | None:
-    if token:
-        return validate_token(token, JWT_SECRET_KEY)
-    return None
-
 
 def get_hashed_password(password: str) -> str:
     return password_context.hash(password)
@@ -127,45 +55,4 @@ def verify_password(password: str, hashed_pass: str) -> bool:
         return password_context.verify(password, hashed_pass)
     except Exception as e:
         return False
-
-
-def create_access_token(
-        subject: Union[str, Any], expires_delta: int = None,
-        scopes: Optional[List] = None, roles: Optional[List] = None,
-        client_id: Optional[str] = None
-) -> Tuple[str, datetime]:
-    expires_delta = expires_delta or ACCESS_TOKEN_EXPIRE_MINUTES
-    return encoded_token_data(subject=subject,
-                              expires_delta=expires_delta,
-                              client_id=client_id,
-                              roles=roles,
-                              scopes=scopes)
-
-
-def create_refresh_token(
-        subject: Union[str, Any], expires_delta: int = None,
-        scopes: Optional[List] = None, roles: Optional[List] = None,
-        client_id: Optional[str] = None
-) -> Tuple[str, datetime]:
-    expires_delta = expires_delta or REFRESH_TOKEN_EXPIRE_MINUTES
-    return encoded_token_data(subject=subject,
-                              expires_delta=expires_delta,
-                              client_id=client_id,
-                              roles=roles,
-                              scopes=scopes)
-
-
-def encoded_token_data(subject: Union[str, Any], expires_delta: int = None,
-                       client_id: Optional[str] = None, scopes: Optional[List] = None, roles: Optional[List] = None) -> \
-        Tuple[str, datetime]:
-    exp = datetime.now(UTC) + timedelta(minutes=expires_delta)
-    payload = {
-        "sub": subject,
-        "exp": exp,
-        "client_id": client_id,
-        "scopes": scopes,
-        "roles": roles,
-    }
-    encoded = jwt.encode(payload, JWT_SECRET_KEY, ALGORITHM)
-    return encoded, exp
 
