@@ -1,18 +1,17 @@
 
 import type { UserApi } from "./user/model";
-import {userApi} from "./user/userApi";
+import type { AuthApi } from "./auth/model";
+import { userApi } from "./user/userApi";
+import { authApi } from "./auth/authApi";
 
 interface ApiCollection {
     user: UserApi;
-    // Add other API modules here as you create them
-    // auth: AuthAPI;
+    auth: AuthApi;
 }
-
-
 
 export const useApi = (): ApiCollection => {
-return {
-    user: userApi(),
-}
-
-}
+    return {
+        user: userApi(),
+        auth: authApi(),
+    };
+};

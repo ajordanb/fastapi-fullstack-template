@@ -15,6 +15,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as ValidateMagicLinkImport } from './routes/validateMagicLink'
 import { Route as UnauthorizedImport } from './routes/unauthorized'
+import { Route as SsoImport } from './routes/sso'
 import { Route as RequestNewPasswordImport } from './routes/requestNewPassword'
 import { Route as RequestMagicLinkImport } from './routes/requestMagicLink'
 import { Route as RegisterImport } from './routes/register'
@@ -42,6 +43,12 @@ const ValidateMagicLinkRoute = ValidateMagicLinkImport.update({
 const UnauthorizedRoute = UnauthorizedImport.update({
   id: '/unauthorized',
   path: '/unauthorized',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const SsoRoute = SsoImport.update({
+  id: '/sso',
+  path: '/sso',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -163,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RequestNewPasswordImport
       parentRoute: typeof rootRoute
     }
+    '/sso': {
+      id: '/sso'
+      path: '/sso'
+      fullPath: '/sso'
+      preLoaderRoute: typeof SsoImport
+      parentRoute: typeof rootRoute
+    }
     '/unauthorized': {
       id: '/unauthorized'
       path: '/unauthorized'
@@ -271,6 +285,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/requestMagicLink': typeof RequestMagicLinkRoute
   '/requestNewPassword': typeof RequestNewPasswordRoute
+  '/sso': typeof SsoRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/validateMagicLink': typeof ValidateMagicLinkRoute
   '/admin': typeof AuthenticatedAdminLayoutRoute
@@ -286,6 +301,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/requestMagicLink': typeof RequestMagicLinkRoute
   '/requestNewPassword': typeof RequestNewPasswordRoute
+  '/sso': typeof SsoRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/validateMagicLink': typeof ValidateMagicLinkRoute
   '/admin': typeof AuthenticatedAdminLayoutRoute
@@ -302,6 +318,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/requestMagicLink': typeof RequestMagicLinkRoute
   '/requestNewPassword': typeof RequestNewPasswordRoute
+  '/sso': typeof SsoRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/validateMagicLink': typeof ValidateMagicLinkRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
@@ -321,6 +338,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/requestMagicLink'
     | '/requestNewPassword'
+    | '/sso'
     | '/unauthorized'
     | '/validateMagicLink'
     | '/admin'
@@ -335,6 +353,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/requestMagicLink'
     | '/requestNewPassword'
+    | '/sso'
     | '/unauthorized'
     | '/validateMagicLink'
     | '/admin'
@@ -349,6 +368,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/requestMagicLink'
     | '/requestNewPassword'
+    | '/sso'
     | '/unauthorized'
     | '/validateMagicLink'
     | '/_authenticated/admin'
@@ -367,6 +387,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   RequestMagicLinkRoute: typeof RequestMagicLinkRoute
   RequestNewPasswordRoute: typeof RequestNewPasswordRoute
+  SsoRoute: typeof SsoRoute
   UnauthorizedRoute: typeof UnauthorizedRoute
   ValidateMagicLinkRoute: typeof ValidateMagicLinkRoute
 }
@@ -378,6 +399,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   RequestMagicLinkRoute: RequestMagicLinkRoute,
   RequestNewPasswordRoute: RequestNewPasswordRoute,
+  SsoRoute: SsoRoute,
   UnauthorizedRoute: UnauthorizedRoute,
   ValidateMagicLinkRoute: ValidateMagicLinkRoute,
 }
@@ -398,6 +420,7 @@ export const routeTree = rootRoute
         "/register",
         "/requestMagicLink",
         "/requestNewPassword",
+        "/sso",
         "/unauthorized",
         "/validateMagicLink"
       ]
@@ -423,6 +446,9 @@ export const routeTree = rootRoute
     },
     "/requestNewPassword": {
       "filePath": "requestNewPassword.tsx"
+    },
+    "/sso": {
+      "filePath": "sso.tsx"
     },
     "/unauthorized": {
       "filePath": "unauthorized.tsx"

@@ -200,4 +200,18 @@ code {
   .form-loading-spinner {
     @apply border-black border-t-transparent;
   }
+
+  /* SSO Magic Animation */
+  @keyframes spin-reverse {
+    from {
+      transform: rotate(360deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
+  }
+
+  .animate-spin-reverse {
+    animation: spin-reverse 3s linear infinite;
+  }
 }
