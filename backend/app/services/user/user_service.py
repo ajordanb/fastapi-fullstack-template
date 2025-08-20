@@ -10,6 +10,7 @@ from app.services.email.email import EmailService
 
 
 class UserService:
+    """Service for retrieving and updating users"""
     def __init__(self,
                  email_service: EmailService,
                  ):
@@ -79,6 +80,7 @@ class UserService:
 
 
 class SelfUserService:
+    """Service for retrieving and updating the current user"""
     def __init__(self, me: User):
         self.me: User = me
 
