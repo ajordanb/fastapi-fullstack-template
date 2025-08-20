@@ -1,15 +1,15 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel, model_validator, EmailStr
+from pydantic import BaseModel, model_validator, EmailStr, Field
 
 
 class AccessToken(BaseModel):
     """Access token details"""
 
-    accessToken: str
-    accessTokenExpires: datetime
-    access_token: Optional[str] = None
+    accessToken: str = Field(description="JWT access token string")
+    accessTokenExpires: datetime = Field(description="When the access token expires")
+    access_token: Optional[str] = Field(default=None, description="Alternative access token field")
 
     @model_validator(mode="before")
     def validate_access_token(cls, values: dict):
@@ -20,28 +20,28 @@ class AccessToken(BaseModel):
 class RefreshToken(AccessToken):
     """Access and refresh token details"""
 
-    refreshToken: str
-    refreshTokenExpires: datetime
+    refreshToken: str = Field(description="JWT refresh token string")
+    refreshTokenExpires: datetime = Field(description="When the refresh token expires")
 
 
 class MsAuthRequest(BaseModel):
-    code: str
-    code_verifier: str
+    code: str = Field(description="Authorization code from Microsoft")
+    code_verifier: str = Field(description="PKCE code verifier")
 
 
 class SocialLoginRequest(BaseModel):
-    provider: str
-    data: dict
-    redirect_url: str | None = ""
+    provider: str = Field(description="Name of the social login provider")
+    data: dict = Field(description="Provider-specific authentication data")
+    redirect_url: str | None = Field(default="", description="URL to redirect to after authentication")
 
 
 class GoogleAuthToken(BaseModel):
-    token: str
+    token: str = Field(description="Google authentication token")
 
 
 class NewPassword(BaseModel):
-    token: str
-    new_password: str
+    token: str = Field(description="Password reset token")
+    new_password: str = Field(description="New password to set")
 
 
 class TokenType(str, Enum):
@@ -50,11 +50,11 @@ class TokenType(str, Enum):
 
 
 class Token(BaseModel):
-    sub: str
-    exp: int
-    domain: Optional[dict] = None
-    client_id: Optional[str] = None
-    iat: datetime
+    sub: str = Field(description="Subject (user ID) of the token")
+    exp: int = Field(description="Expiration timestamp")
+    domain: Optional[dict] = Field(default=None, description="Domain-specific data")
+    client_id: Optional[str] = Field(default=None, description="Client ID that requested the token")
+    iat: datetime = Field(description="Issued at timestamp")
 
     @property
     def expiration_date(self) -> datetime:
@@ -65,11 +65,11 @@ class Token(BaseModel):
 
 
 class RefreshTokenReq(BaseModel):
-    refreshToken: str
+    refreshToken: str = Field(description="Refresh token to exchange for new access token")
 
 
 class Policy(BaseModel):
-    length: int = 8
-    uppercase: int = 1
-    numbers: int = 1
-    nonletters: int = 1
+    length: int = Field(default=8, description="Minimum password length")
+    uppercase: int = Field(default=1, description="Minimum number of uppercase letters")
+    numbers: int = Field(default=1, description="Minimum number of numeric digits")
+    nonletters: int = Field(default=1, description="Minimum number of special characters")

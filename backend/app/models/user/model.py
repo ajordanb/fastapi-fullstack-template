@@ -2,7 +2,7 @@ from datetime import datetime, UTC
 from typing import List, Self, Optional, Tuple
 from beanie import PydanticObjectId, Document
 from fastapi import HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pymongo import IndexModel
 
 from app.models.role.model import RoleBase, Role
@@ -10,29 +10,29 @@ from app.models.role.model import RoleBase, Role
 
 
 class Activity(BaseModel):
-    payload: dict = {}
-    activity_date: datetime = datetime.now(UTC)
+    payload: dict = Field(default_factory=dict, description="Additional data payload for the activity")
+    activity_date: datetime = Field(default_factory=lambda: datetime.now(UTC), description="Timestamp when the activity occurred")
 
 
 class LoginActivity(Activity):
     pass
 
 class Access(BaseModel):
-    scopes: List[str] = []
-    active: Optional[bool] = True
+    scopes: List[str] = Field(default_factory=list, description="List of permission scopes granted")
+    active: Optional[bool] = Field(default=True, description="Whether the access is currently active")
 
 
 class APIKey(Access):
-    client_id: str
-    hashed_client_secret: str
+    client_id: str = Field(description="Unique identifier for the API client")
+    hashed_client_secret: str = Field(description="Hashed version of the client secret for security")
 
 
 class PSK(Access):
-    psk: str
+    psk: str = Field(description="Pre-shared key for authentication")
 
 
 class CreateAPIKey(APIKey):
-    hashed_client_secret: str
+    hashed_client_secret: str = Field(description="Hashed client secret for new API key creation")
 
 
 class UpdateAPIKey(APIKey):
@@ -41,16 +41,17 @@ class UpdateAPIKey(APIKey):
 
 class UserBase(BaseModel):
     """User Base Model"""
-    username: Optional[str] = None
-    email: str
-    name: str = ""
-    source: str = ""
-    email_confirmed: bool = False
-    is_active: bool = True
-    password_reset_code: str | None = None
-    api_keys: List[APIKey] = []
-    roles: List[PydanticObjectId] = [] # This is a list of Role IDs
-    last_login_activity: Optional[LoginActivity] = None
+    username: Optional[str] = Field(None, alias="email", description="Username for the user account")
+    email: str = Field(None, alias="email", description="Email address of the user")
+    name: str = Field(None, alias="name", description="Full name of the user")
+    source: str = Field(default="", description="Source system where the user originated")
+    email_confirmed: bool = Field(default=False, description="Whether the user's email has been confirmed")
+    is_active: bool = Field(default=True, description="Whether the user account is active")
+    password_reset_code: str | None = Field(default=None, description="Temporary code for password reset")
+    api_keys: List[APIKey] = Field(default_factory=list, description="List of API keys associated with the user")
+    roles: List[PydanticObjectId] = Field(default_factory=list, description="List of role IDs assigned to the user")
+    last_login_activity: Optional[LoginActivity] = Field(default=None, description="Details of the user's last login")
+    last_passwords: List[str] = Field(default_factory=list, max_length=5, description="History of last 5 password hashes for security")
 
     # These properties are not serialized.
     _using_api_key: str | None = None
@@ -65,21 +66,23 @@ class UserBase(BaseModel):
         return api_key[0]
 
 
+
+
 class UserAuth(UserBase):
-    password: str
+    password: str = Field(description="Hashed password for user authentication")
 
 
 class UserOut(UserBase):
     """User out model"""
-    id: PydanticObjectId = None
-    roles: List[RoleBase]
+    id: PydanticObjectId = Field(default=None, description="Unique identifier for the user")
+    roles: List[RoleBase] = Field(description="List of roles assigned to the user with full details")
 
 
 
 class UpdatePassword(BaseModel):
     """Update user password"""
-    current_password: str
-    new_password: str
+    current_password: str = Field(description="Current password for verification")
+    new_password: str = Field(description="New password to set for the user")
 
 
 class User(Document, UserAuth):

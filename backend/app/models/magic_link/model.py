@@ -2,7 +2,7 @@ from datetime import datetime, UTC, timedelta
 from enum import Enum
 from typing import Self, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from beanie import PydanticObjectId, Document
 from pymongo import IndexModel
 from bson import ObjectId
@@ -16,11 +16,11 @@ class MagicType(str, Enum):
     recovery = "password_recovery"
 
 class MagicBase(BaseModel):
-    identifier: PydanticObjectId
-    requested_on: datetime
-    link_type: MagicType
-    granted: bool
-    payload: dict
+    identifier: PydanticObjectId = Field(description="ID of the user this magic link is for")
+    requested_on: datetime = Field(description="When the magic link was requested")
+    link_type: MagicType = Field(description="Type of magic link (magic_link or password_recovery)")
+    granted: bool = Field(description="Whether access has been granted using this link")
+    payload: dict = Field(description="Additional data associated with the magic link")
     model_config = {
         "json_encoders": {
             PydanticObjectId: str

@@ -7,10 +7,10 @@ from pymongo import IndexModel
 
 
 class RoleBase(BaseModel):
-    name: str
-    description: str = None
-    created_by: str = None
-    scopes: List[str] = []
+    name: str = Field(description="Name of the role")
+    description: str = Field(default=None, description="Description of what this role provides")
+    created_by: str = Field(default=None, description="User who created this role")
+    scopes: List[str] = Field(default_factory=list, description="List of permission scopes this role grants")
 
     model_config = {
         "json_encoders": {
@@ -20,7 +20,7 @@ class RoleBase(BaseModel):
 
 
 class RoleOut(RoleBase):
-    id: PydanticObjectId = Field(alias="_id")
+    id: PydanticObjectId = Field(alias="_id", description="Unique identifier for the role")
 
     model_config = {
         "populate_by_name": True,

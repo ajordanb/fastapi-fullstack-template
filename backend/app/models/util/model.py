@@ -2,12 +2,12 @@ import base64
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, model_serializer, computed_field
+from pydantic import BaseModel, model_serializer, computed_field, Field
 
 
 class EmailAttachment(BaseModel):
-    file_name: str
-    file_data_encoded: Optional[str] = None
+    file_name: str = Field(description="Name of the attached file")
+    file_data_encoded: Optional[str] = Field(default=None, description="Base64 encoded file data")
 
     def __init__(self, file_name: str, file_data: Optional[bytes] = None, file_data_encoded: Optional[str] = None):
         super().__init__(file_name=file_name)
@@ -34,10 +34,10 @@ class EmailAttachment(BaseModel):
 
 
 class EmailData(BaseModel):
-    to: str | list[str]
-    html_content: str
-    subject: str
-    attachments: Optional[list[EmailAttachment]] = None
+    to: str | list[str] = Field(description="Email recipient(s)")
+    html_content: str = Field(description="HTML content of the email")
+    subject: str = Field(description="Email subject line")
+    attachments: Optional[list[EmailAttachment]] = Field(default=None, description="List of file attachments")
 
 
 class MessageType(str, Enum):
@@ -48,8 +48,8 @@ class MessageType(str, Enum):
 
 
 class Message(BaseModel):
-    message: str = ""
-    type: MessageType = MessageType.info
+    message: str = Field(default="", description="The message content")
+    type: MessageType = Field(default=MessageType.info, description="Type of message (success, failure, warning, info)")
 
     @classmethod
     def success(cls, message: str):

@@ -214,6 +214,8 @@ async def reset_password(
         raise HTTPException(status_code=404, detail="User not found")
     if user.source == "Basic":
         hashed_password = get_hashed_password(new_password)
+        if hashed_password in user.last_passwords:
+            raise HTTPException(400, "Unable to reset password: User has already used this password.")
         user.password = hashed_password
         await user.save()
         return Message.success("Password reset successfully.")
