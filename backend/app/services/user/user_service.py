@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from starlette import status
 from app.core.security.api import verify_password, get_hashed_password
 from app.models.auth.model import Token
+from app.models.role.model import Role
 from app.models.user.model import UserAuth, User, UserBase, UserOut
 from app.models.util.model import Message
 from app.services.email.email import EmailService
@@ -22,18 +23,38 @@ class UserService:
             response.append(UserOut(**user.model_dump(exclude={'roles'}), roles=user_roles))
         return response
 
-    async def get_user_by_id(self):
-        pass
+    async def get_user_by_id(self, user_id: str):
+        user = await User.by_id(user_id)
+        return user
 
     async def get_user_by_email(self, email: str) -> User:
         user = await User.by_email(email)
         return user
 
-    async def create_user(self, user_data: UserAuth):
-        pass
+    async def create_user(self, user_register: UserAuth):
+        if _ := await self.get_user_by_email(user_register.email):
+            raise HTTPException(
+                status_code=400,
+                detail="User already exists",
+            )
+        for role in user_register.roles:
+            if not (_ := await Role.by_id(role)):
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Role with id {role} does not exist",
+                )
+        hashed_password = get_hashed_password(user_register.password)
+        user_register.password = hashed_password
+        new_user = User(**user_register.model_dump())
+        await User.insert(new_user)
+        return new_user
 
-    async def update_user(self):
-        pass
+    async def update_user(self, user_update: UserBase) -> UserBase:
+        user = await self.get_user_by_id(user_update.id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        await user.update(user_update.model_dump(exclude_unset=True))
+        return user
 
     async def delete_user(self):
         pass
@@ -55,8 +76,6 @@ class UserService:
                 detail="Could not find user",
             )
         return user
-
-
 
 
 class SelfUserService:

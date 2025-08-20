@@ -155,11 +155,7 @@ async def validate_magic_link(
         auth_service: AuthService = Depends(get_auth_service)  # FIXED: Add dependency parameter
 ) -> RefreshToken:
     user = await User.by_email(token_data.sub)
-
-    # ISSUE 4: Should get user scopes/roles for magic link login too
     scopes, user_role_names = await user.get_user_scopes_and_roles()
-
-    # OPTIMIZATION: Use create_token_pair
     tokens = auth_service.create_token_pair(
         subject=user.email,
         client_id=token_data.client_id,

@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Body, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, Body, Form, Request, BackgroundTasks
 
 from app.api.v1.user.helpers import generate_email
 from app.core.config import settings
@@ -40,25 +40,13 @@ user_service: UserService = Depends(get_user_service)
 @user_router.post("/register", dependencies=[manage_users, app_admin])
 async def create_user(
         user_register: UserAuth,
+        user_service: UserService = Depends(get_user_service),
+        bg: BackgroundTasks = Depends()
 ):
     """Admin endpoint to create a new user"""
-    if _ := await User.by_email(user_register.email):
-        raise HTTPException(
-            status_code=400,
-            detail="User already exists",
-        )
-    for role in user_register.roles:
-        if not (_ := await Role.by_id(role)):
-            raise HTTPException(
-                status_code=404,
-                detail=f"Role with id {role} does not exist",
-            )
-    hashed_password = get_hashed_password(user_register.password)
-    user_register.password = hashed_password
-    new_user = User(**user_register.model_dump())
+    new_user = await user_service.create_user(user_register)
     email_data = await generate_email(new_user, "welcome")
-    send_email(email=email_data)
-    await User.insert(new_user)
+    bg.add_task(send_email, email=email_data)
     return UserBase(**new_user.model_dump())
 
 
@@ -82,42 +70,37 @@ async def update_password(
 @user_router.post("/by_id", dependencies=[app_admin, manage_users])
 async def by_id(
         id: str,
+        user_service: UserService = Depends(get_user_service),
 ) -> UserBase:
     """Admin endpoint to retrieve a user's profile by id'"""
-    return await User.by_id(id)
+    return await user_service.get_user_by_id(id)
 
 
 @user_router.post("/by_email", dependencies=[app_admin, manage_users])
 async def by_email(
         email: str,
+        user_service: UserService = Depends(get_user_service),
 ) -> UserBase:
     """Admin endpoint to retrieve a user's profile by email'"""
-    return await User.by_email(email)
+    return await user_service.get_user_by_email(email)
 
 
 @user_router.post("/update", dependencies=[app_admin, manage_users])
 async def update_user(
         user_update: UserBase,
+        user_service: UserService = Depends(get_user_service),
 ) -> UserBase:
     """Admin endpoint to update a user"""
-    user = await User.by_id(user_update.id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    await user.update(user_update.model_dump(exclude_unset=True))
-    return user
+    return await user_service.update_user(user_update)
 
 
 @user_router.post("/me/update", dependencies=[app_admin, manage_users])
 async def update_my_user(
-        me: User = Depends(current_user),
+        me: SelfUserService = Depends(get_self_user_service),
         user_update: UserBase = Body(...),
 ) -> UserBase:
     """Update user endpoint"""
-    user = await User.by_id(me.id)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    await user.update(user_update.model_dump(exclude_unset=True))
-    return user
+    return await me.update_my_user(user_update)
 
 
 @user_router.post("/api_key/create", dependencies=[app_admin, manage_users])
