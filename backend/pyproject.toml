@@ -22,4 +22,7 @@ dependencies = [
     "python-multipart>=0.0.20",
     "slowapi>=0.1.9",
     "uvicorn>=0.34.2",
+    "dramatiq[redis,watch]>=1.17.0",
+    "redis>=5.0.0",
+    "questionary>=2.1.1",
 ]

@@ -1,16 +1,10 @@
 from datetime import datetime, timedelta, UTC
 from typing import Any, Tuple, Union, Optional, List
-from password_strength import PasswordPolicy
 
-from app.models.auth.model import Token, TokenType
 from app.core.config import settings
-from fastapi import Depends, HTTPException, Form
+from fastapi import Form
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
-
-from pydantic import BaseModel, ValidationError
-from starlette import status
-import jwt
 
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.token_expire_minutes
 REFRESH_TOKEN_EXPIRE_MINUTES = settings.refresh_token_expire_minutes
@@ -20,11 +14,13 @@ JWT_REFRESH_SECRET_KEY = settings.authjwt_refresh_key
 
 password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 if settings.mount_point:
-    reuseable_oauth = OAuth2PasswordBearer(tokenUrl=f"/{settings.mount_point}/auth/token", scheme_name="JWT",
-                                           auto_error=False)
+    reusable_oauth = OAuth2PasswordBearer(tokenUrl=f"/{settings.mount_point}/auth/token",
+                                           scheme_name="JWT",
+                                           auto_error=True)
 else:
-    reuseable_oauth = OAuth2PasswordBearer(tokenUrl=f"/auth/token", scheme_name="JWT", auto_error=False)
-
+    reusable_oauth = OAuth2PasswordBearer(tokenUrl=f"/auth/token",
+                                           scheme_name="JWT",
+                                           auto_error=True)
 
 
 class CustomOAuth2RequestForm:
@@ -45,7 +41,6 @@ class CustomOAuth2RequestForm:
         self.payload = payload or {}
 
 
-
 def get_hashed_password(password: str) -> str:
     return password_context.hash(password)
 
@@ -55,4 +50,3 @@ def verify_password(password: str, hashed_pass: str) -> bool:
         return password_context.verify(password, hashed_pass)
     except Exception as e:
         return False
-

@@ -80,7 +80,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔗 Magic Link</h1>
+            <h1>Sign In Link</h1>
         </div>
         <div class="content">
             <p>Hello <span class="highlight">{{ user_email }}</span>,</p>
@@ -90,7 +90,7 @@
             <a class="magic-button" href="{{ magic_link }}">Sign In Now</a>
             
             <div class="info-box">
-                <p><strong>⏰ Important:</strong> This link will expire in {{ valid_minutes }} minutes and can only be used once.</p>
+                <p><strong>Important:</strong> This link will expire in {{ valid_minutes }} minutes and can only be used once.</p>
                 <p>If you didn't request this login link, you can safely ignore this email.</p>
             </div>
         </div>

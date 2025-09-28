@@ -1,22 +1,19 @@
 from typing import TypeVar
 from fastapi import HTTPException, Depends
-from starlette import status
-
-from app.core.security.api import reuseable_oauth
+from app.core.security.api import  reusable_oauth
 from app.models.auth.model import Token, Policy, RefreshTokenReq
 from app.models.role.model import Role
 from app.models.user.model import User
 from app.services.auth.auth_service import SecurityService, AuthService
-from app.services.email.email import EmailService, get_email_service
-from app.services.user.user_service import UserService, SelfUserService
+from app.services.dramatiq.dramatiq_service import DramatiqService
+from app.services.email.email import EmailService
+from app.services.user.user_service import UserService, MyUserService
 
 T = TypeVar('T')
 
 
-def get_user_service(
-        email_service: EmailService = Depends(get_email_service)
-):
-    return UserService(email_service)
+def get_email_service():
+    return EmailService()
 
 
 def get_security_service() -> SecurityService:
@@ -26,6 +23,15 @@ def get_security_service() -> SecurityService:
 def get_auth_service(security_service=Depends(get_security_service)) -> AuthService:
     return AuthService(security_service)
 
+def get_dramatiq_service() -> DramatiqService:
+    return DramatiqService()
+
+def get_user_service(
+        email_service: EmailService = Depends(get_email_service),
+        auth_service: AuthService = Depends(get_auth_service),
+):
+    return UserService(email_service, auth_service)
+
 
 def valid_token(token: str,
                 security_service: SecurityService = Depends(get_security_service)
@@ -33,7 +39,7 @@ def valid_token(token: str,
     return security_service.validate_access_token(token)
 
 
-def valid_access_token(token: str = Depends(reuseable_oauth),
+def valid_access_token(token: str = Depends(reusable_oauth),
                        security_service: SecurityService = Depends(get_security_service)
                        ):
     return security_service.validate_access_token(token)
@@ -61,7 +67,7 @@ async def current_user(
 
 
 def get_self_user_service(me: User = Depends(current_user)):
-    return SelfUserService(me)
+    return MyUserService(me)
 
 
 async def admin_access(user: User = Depends(current_user)) -> User:

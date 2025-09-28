@@ -1,6 +1,6 @@
 from pathlib import Path
-from jinja2 import Template, Environment, FileSystemLoader
-from typing import Any, Optional
+from jinja2 import  Environment, FileSystemLoader
+from typing import Any
 import emails
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -10,13 +10,10 @@ from app.core.config import settings
 from app.models.util.model import EmailData
 
 
-def get_email_service():
-    return EmailService()
 
 
 class EmailService:
     def __init__(self):
-        # Initialize Jinja2 environment for better template handling
         template_dir = Path(__file__).parent / "email-templates" / "built"
         self.jinja_env = Environment(
             loader=FileSystemLoader(template_dir),
@@ -89,15 +86,17 @@ class EmailService:
     def generate_reset_password_email(self, reset_email: str, token: str) -> EmailData:
         subject = f"Password recovery for {reset_email}"
         link = f"{settings.app_domain}/password_reset?token={token}&email={reset_email}"
-
+        logger.debug(f"Generated reset link: {link}")
+        context = {
+            "reset_email": reset_email,
+            "valid_minutes": settings.email_reset_token_expire_minutes,
+            "reset_link": link,
+            "app_name": getattr(settings, 'app_name', 'Your App'),
+        }
+        logger.debug(f"Template context: {context}")
         html_content = self.render_email_template(
             template_name="reset_password.html",
-            context={
-                "user_email": reset_email,
-                "valid_minutes": settings.email_reset_token_expire_minutes,
-                "reset_link": link,
-                "app_name": getattr(settings, 'app_name', 'Your App'),
-            },
+            context=context,
         )
         return EmailData(to=reset_email, html_content=html_content, subject=subject)
 
@@ -128,6 +127,7 @@ class EmailService:
             },
         )
         return EmailData(to=user_email, html_content=html_content, subject=subject)
+
 
     async def send_welcome_email(self, user_email: str, token: str) -> bool:
         email_data = self.generate_welcome_email(user_email, token)

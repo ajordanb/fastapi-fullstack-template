@@ -1,10 +1,7 @@
-from fastapi import HTTPException, Depends
-from app.email_client import generate_magic_link_email, generate_reset_password_email, generate_welcome_email
+from fastapi import HTTPException
 from app.models.user.model import User
 from app.services.auth.auth_service import AuthService
-from app.utills.dependencies import get_auth_service
-
-auth_service: AuthService = Depends(get_auth_service)
+from app.services.email.email import EmailService
 
 async def validate_user_does_not_exist(email: str):
     if _ := await User.by_email(email):
@@ -37,13 +34,16 @@ async def validate_user_state_for_verification(user: User):
 
 
 
-async def generate_email(user: User, type: str):
+async def generate_email(user: User, type: str, auth_service: AuthService):
     scopes, roles = await user.get_user_scopes_and_roles()
     access_token, at_expires = auth_service.create_access_token(subject=user.email, scopes=scopes, roles=roles)
+
+    email_service = EmailService()
+
     if type == "magic_link":
-        return generate_magic_link_email(user_email=user.email, token=access_token)
+        return email_service.generate_magic_link_email(user_email=user.email, token=access_token)
     elif type == "recover_password":
-        return generate_reset_password_email(reset_email=user.email, token=access_token)
+        return email_service.generate_reset_password_email(reset_email=user.email, token=access_token)
     elif type == "welcome":
-        return generate_welcome_email(reset_email=user.email, token=access_token)
+        return email_service.generate_welcome_email(user_email=user.email, token=access_token)
     return None

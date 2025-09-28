@@ -43,7 +43,7 @@ class UserBase(BaseModel):
     """User Base Model"""
     username: Optional[str] = Field(None, alias="email", description="Username for the user account")
     email: str = Field(None, alias="email", description="Email address of the user")
-    name: str = Field(None, alias="name", description="Full name of the user")
+    name: str | None = Field(None, alias="name", description="Full name of the user")
     source: str = Field(default="", description="Source system where the user originated")
     email_confirmed: bool = Field(default=False, description="Whether the user's email has been confirmed")
     is_active: bool = Field(default=True, description="Whether the user account is active")

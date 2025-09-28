@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends, Body, HTTPException, Request
 from app.core.security.helpers import password_authenticated_user, client_id_authenticated_user
-from app.models.auth.model import SocialLoginRequest
+from app.models.auth.model import SocialLoginRequest, Token
 
 from app.core.security.api import (
-    Token,
     CustomOAuth2RequestForm,
 )
 from app.models.auth.model import RefreshToken

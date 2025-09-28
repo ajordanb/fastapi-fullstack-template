@@ -1,36 +1,94 @@
 import asyncio
+from typing import Optional
 import motor.motor_asyncio
 from beanie import Document, init_beanie
 from loguru import logger
 
 from app.core.security.api import password_context
 from app.core.config import settings
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from app.models.role.model import Role
 from app.models.user.model import User
 
 
-class DBManager:
-    _client: AsyncIOMotorClient
-    async def init_db(self, client=None):
-        """Initialize the database."""
-        if client is None:
+class DatabaseManager:
+    def __init__(self):
+        self._client: Optional[AsyncIOMotorClient] = None
+        self._database: Optional[AsyncIOMotorDatabase] = None
+        self._is_initialized = False
+
+    async def connect(self) -> None:
+        if self._is_initialized:
+            return
+        try:
             if settings.db_conn_str.startswith("mongodb://localhost"):
-                client = motor.motor_asyncio.AsyncIOMotorClient(settings.db_conn_str)
+                self._client = motor.motor_asyncio.AsyncIOMotorClient(
+                    settings.db_conn_str,
+                    maxPoolSize=10,
+                    minPoolSize=1,
+                    serverSelectionTimeoutMS=5000,
+                    connectTimeoutMS=10000,
+                    socketTimeoutMS=20000,
+                )
+                self._client.get_io_loop = asyncio.get_event_loop
             else:
-                client = motor.motor_asyncio.AsyncIOMotorClient(
-                    settings.db_conn_str, authmechanism="DEFAULT"
+                self._client = motor.motor_asyncio.AsyncIOMotorClient(
+                    settings.db_conn_str,
+                    maxPoolSize=10,
+                    minPoolSize=1,
+                    serverSelectionTimeoutMS=5000,
+                    connectTimeoutMS=10000,
+                    socketTimeoutMS=20000,
+                    authMechanism="DEFAULT"
                 )
 
-        collections = Document.__subclasses__()
-        await init_beanie(database=client[settings.db_name], document_models=collections)
-        self._client = client
+            self._database = self._client[settings.db_name]
+            await self._client.admin.command('ping')
+            collections = Document.__subclasses__()
+            await init_beanie(database=self._database, document_models=collections)
 
-    async def close(self):
-        """Close the MongoDB connection."""
-        if hasattr(self, '_client') and self._client is not None:
+            self._is_initialized = True
+            logger.info("Database connection established successfully")
+
+        except Exception as e:
+            logger.error(f"Failed to connect to database: {e}")
+            await self.disconnect()
+            raise
+
+    async def disconnect(self) -> None:
+        if self._client:
             self._client.close()
+            self._client = None
+            self._database = None
+            self._is_initialized = False
+            logger.info("Database connection closed")
+
+    async def health_check(self) -> bool:
+        try:
+            if not self._client:
+                return False
+            await self._client.admin.command('ping')
+            return True
+        except Exception as e:
+            logger.warning(f"Database health check failed: {e}")
+            return False
+
+    @property
+    def client(self) -> Optional[AsyncIOMotorClient]:
+        return self._client
+
+    @property
+    def database(self) -> Optional[AsyncIOMotorDatabase]:
+        return self._database
+
+    @property
+    def is_connected(self) -> bool:
+        return self._is_initialized and self._client is not None
+
+
+# Global database manager instance
+db_manager = DatabaseManager()
 
 
 async def wipe():
@@ -68,6 +126,4 @@ async def create_admin_role():
         logger.info(f"Created admin role: {admin_role}")
 
 
-if __name__ == "__main__":
-    db = DBManager()
-    asyncio.run(db.init_db())
+

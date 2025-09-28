@@ -1,24 +1,32 @@
 from typing import List
 from fastapi import HTTPException
 from starlette import status
-from app.core.security.api import verify_password, get_hashed_password
+
+from app.core.security.api import verify_password, get_hashed_password, password_context
 from app.models.auth.model import Token
+from app.models.magic_link.model import MagicLink, MagicType
 from app.models.role.model import Role
-from app.models.user.model import UserAuth, User, UserBase, UserOut
+from app.models.user.model import UserAuth, User, UserBase, UserOut, APIKey, UpdateAPIKey
 from app.models.util.model import Message
+from app.services.auth.auth_service import AuthService
 from app.services.email.email import EmailService
+from app.tasks.background_tasks import send_welcome_email_task, send_reset_password_email_task, \
+    send_magic_link_email_task
 
 
 class UserService:
     """Service for retrieving and updating users"""
+
     def __init__(self,
                  email_service: EmailService,
+                 auth_service: AuthService,
                  ):
         self.email_service = email_service
+        self.auth_service = auth_service
 
     async def get_all_users(self, skip: int = 0, limit: int = 1000) -> List[UserOut]:
         response: List[UserOut] = []
-        users = await User.all_users(skip,limit)
+        users = await User.all_users(skip, limit)
         for user in users:
             user_roles = await user.user_roles()
             response.append(UserOut(**user.model_dump(exclude={'roles'}), roles=user_roles))
@@ -48,6 +56,8 @@ class UserService:
         user_register.password = hashed_password
         new_user = User(**user_register.model_dump())
         await User.insert(new_user)
+        email, token = await self.generate_user_tuple_for_email(new_user)
+        send_welcome_email_task.send(user_email=email, token=token)
         return new_user
 
     async def update_user(self, user_update: UserBase) -> UserBase:
@@ -57,11 +67,13 @@ class UserService:
         await user.update(user_update.model_dump(exclude_unset=True))
         return user
 
-    async def delete_user(self):
-        pass
+    async def delete_user(self, user_id: str) -> Message:
+        user = await self.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
 
-    async def update_user_password(self):
-        pass
+        await user.delete()
+        return Message(message="User deleted successfully")
 
     async def current_user(self, token: Token):
         user = await self.get_user_by_email(token.sub)
@@ -78,9 +90,99 @@ class UserService:
             )
         return user
 
+    async def recover_password(self, email: str) -> Message:
+        user = await User.by_email(email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        if user.source == "Basic" or user.password is not None:
+            await MagicLink.request_magic(identifier=user.id, _type=MagicType.recovery)
+            email, token = await self.generate_user_tuple_for_email(user)
+            send_reset_password_email_task.send(user_email=email, token=token)
+            return Message(message="Password recovery email sent")
+        else:
+            raise HTTPException(status_code=400, detail="User is not authenticated via password.")
 
-class SelfUserService:
+    async def create_api_key(self, api_key: APIKey, email: str) -> APIKey:
+        existing_api_key = await User.by_client_id(api_key.client_id, raise_on_zero=False)
+        if existing_api_key:
+            raise HTTPException(status_code=400, detail="API key already exists.")
+        user = await User.by_email(email)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        new_api_key = APIKey(
+            client_id=api_key.client_id,
+            hashed_client_secret=password_context.hash(api_key.client_secret),
+            scopes=api_key.scopes,
+            active=api_key.active
+        )
+        user.api_keys.append(new_api_key)
+        await user.save()
+        return new_api_key
+
+    async def update_api_key(self, key_updates: UpdateAPIKey) -> APIKey:
+        user = await User.by_client_id(key_updates.client_id, raise_on_zero=False)
+        if not user:
+            raise HTTPException(status_code=400, detail="Could not find user for API key")
+
+        for i, key in enumerate(user.api_keys):
+            if key.client_id == key_updates.client_id:
+                to_update = key_updates.model_dump(
+                    exclude={"client_secret"},
+                    exclude_unset=True
+                )
+                if key_updates.client_secret:
+                    to_update["hashed_client_secret"] = password_context.hash(key_updates.client_secret)
+                key = key.model_copy(update=to_update)
+                user.api_keys[i] = key
+                await user.save()
+                return key
+        raise HTTPException(status_code=400, detail="Could not find API key")
+
+    async def delete_api_key(self, client_id: str) -> Message:
+        linked_user = await User.by_client_id(client_id)
+        if not linked_user:
+            raise HTTPException(status_code=404, detail="API key not found")
+
+        linked_user.api_keys = [key for key in linked_user.api_keys if key.client_id != client_id]
+        await linked_user.save()
+        return Message(message="API key deleted successfully")
+
+    async def send_magic_link(self, email: str) -> Message:
+        user = await User.by_email(email)
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        if user.source.lower() == "basic" or user.password is not None:
+            await MagicLink.request_magic(identifier=user.id, _type=MagicType.magic)
+            email, token = await self.generate_user_tuple_for_email(user)
+            send_magic_link_email_task.send(user_email=email, token=token)
+            return Message(message="Magic link email sent")
+        else:
+            raise HTTPException(status_code=400, detail="User is not authenticated via password.")
+
+    async def reset_password(self, new_password: str, token_sub: str) -> Message:
+        user = await User.by_email(token_sub)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        if user.source == "Basic":
+            hashed_password = get_hashed_password(new_password)
+            if hashed_password in user.last_passwords:
+                raise HTTPException(400, "Unable to reset password: User has already used this password.")
+            user.password = hashed_password
+            await user.save()
+            return Message(message="Password reset successfully")
+        else:
+            raise HTTPException(400, "Unable to reset password: User is not authenticated via password.")
+
+    async def generate_user_tuple_for_email(self, user: User) -> tuple[str, str]:
+        scopes, roles = await user.get_user_scopes_and_roles()
+        access_token, at_expires = self.auth_service.create_access_token(subject=user.email, scopes=scopes, roles=roles)
+        return user.email, access_token
+
+
+class MyUserService:
     """Service for retrieving and updating the current user"""
+
     def __init__(self, me: User):
         self.me: User = me
 
@@ -106,4 +208,3 @@ class SelfUserService:
     async def delete_my_user(self):
         await self.me.delete()
         return Message(message="Password updated successfully")
-

@@ -1,19 +1,13 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Body, Form, Request, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Body, Form, Request, BackgroundTasks, Path
 
-from app.api.v1.user.helpers import generate_email
 from app.core.config import settings
-from app.email_client import send_email
-from app.models.magic_link.model import MagicType, MagicLink
-from app.models.role.model import Role
-from app.models.user.model import UserAuth, UpdatePassword, UserBase, APIKey, UpdateAPIKey, User, UserOut
-from app.core.security.api import (
-    get_hashed_password, password_context,
-)
+from app.models.user.model import UserAuth, UpdatePassword, UserBase, APIKey, UpdateAPIKey, UserOut
 from app.models.util.model import Message
-from app.services.user.user_service import  SelfUserService, UserService
-from app.utills.dependencies import current_user, admin_access, CheckScope, get_user_service, get_self_user_service, \
+from app.services.user.user_service import UserService, MyUserService
+from app.tasks.background_tasks import send_reset_password_email_task
+from app.utills.dependencies import admin_access, CheckScope, get_user_service, get_self_user_service, \
     validate_link_token
 
 from slowapi import Limiter
@@ -26,11 +20,11 @@ app_admin = Depends(admin_access)
 manage_users = Depends(CheckScope("users.write"))
 
 
-@user_router.post("/all", dependencies=[app_admin, manage_users])
+@user_router.get("/all", dependencies=[app_admin, manage_users])
 async def get_all_users(
         skip: int = 0,
         limit: int = 1000,
-user_service: UserService = Depends(get_user_service)
+        user_service: UserService = Depends(get_user_service)
 
 ) -> List[UserOut]:
     """Admin endpoint to get all users"""
@@ -40,52 +34,33 @@ user_service: UserService = Depends(get_user_service)
 @user_router.post("/register", dependencies=[manage_users, app_admin])
 async def create_user(
         user_register: UserAuth,
+        bg: BackgroundTasks,
         user_service: UserService = Depends(get_user_service),
-        bg: BackgroundTasks = Depends()
 ):
     """Admin endpoint to create a new user"""
     new_user = await user_service.create_user(user_register)
-    email_data = await generate_email(new_user, "welcome")
-    bg.add_task(send_email, email=email_data)
     return UserBase(**new_user.model_dump())
 
 
-@user_router.post("/me")
-async def profile(
-        me: SelfUserService = Depends(get_self_user_service)
-) -> UserBase:
-    """Retrieve current user's metadata"""
-    return await me.my_profile()
-
-
-@user_router.post("/me/update_password")
-async def update_password(
-        body: UpdatePassword,
-        me: SelfUserService = Depends(get_self_user_service),
-) -> Message:
-    """Update password endpoint"""
-    return await me.update_my_password(body.current_password, body.new_password)
-
-
-@user_router.post("/by_id", dependencies=[app_admin, manage_users])
+@user_router.get("/by_id/{id}", dependencies=[app_admin, manage_users])
 async def by_id(
-        id: str,
+        id: str = Path(..., description="User ID"),
         user_service: UserService = Depends(get_user_service),
 ) -> UserBase:
     """Admin endpoint to retrieve a user's profile by id'"""
     return await user_service.get_user_by_id(id)
 
 
-@user_router.post("/by_email", dependencies=[app_admin, manage_users])
+@user_router.get("/by_email/{email}", dependencies=[app_admin, manage_users])
 async def by_email(
-        email: str,
+        email: str = Path(..., description="User email"),
         user_service: UserService = Depends(get_user_service),
 ) -> UserBase:
     """Admin endpoint to retrieve a user's profile by email'"""
     return await user_service.get_user_by_email(email)
 
 
-@user_router.post("/update", dependencies=[app_admin, manage_users])
+@user_router.put("/update", dependencies=[app_admin, manage_users])
 async def update_user(
         user_update: UserBase,
         user_service: UserService = Depends(get_user_service),
@@ -94,113 +69,112 @@ async def update_user(
     return await user_service.update_user(user_update)
 
 
-@user_router.post("/me/update", dependencies=[app_admin, manage_users])
-async def update_my_user(
-        me: SelfUserService = Depends(get_self_user_service),
-        user_update: UserBase = Body(...),
-) -> UserBase:
-    """Update user endpoint"""
-    return await me.update_my_user(user_update)
+@user_router.delete("/delete/{user_id}", dependencies=[app_admin, manage_users])
+async def delete_user(
+        user_id: str = Path(..., description="User ID to delete"),
+        user_service: UserService = Depends(get_user_service),
+) -> Message:
+    """Admin endpoint to delete a user"""
+    return await user_service.delete_user(user_id)
 
 
 @user_router.post("/api_key/create", dependencies=[app_admin, manage_users])
 async def create_api_key(
         api_key: APIKey,
         email: str = Body(...),
+        user_service: UserService = Depends(get_user_service),
 ) -> APIKey:
-    """Create an API key for the specified user."""
-    existing_api_key = await User.by_client_id(api_key.client_id, raise_on_zero=False)
-    if existing_api_key:
-        raise HTTPException(status_code=400, detail="API key already exists.")
-    user = await User.by_email(email)
-    api_key = APIKey(
-        client_id=api_key.client_id,
-        hashed_client_secret=password_context.hash(api_key.client_secret),
-        scopes=api_key.scopes,
-        active=api_key.active
-    )
-    user.api_keys.append(api_key)
-    await user.save()
-    return api_key
+    """Admin Endpoint to create an API key for the specified user."""
+    return await user_service.create_api_key(api_key, email)
 
 
-@user_router.post("/api_key/update", dependencies=[app_admin, manage_users])
-async def update_api_key(key_updates: UpdateAPIKey) -> APIKey:
-    user = await User.by_client_id(key_updates.client_id, raise_on_zero=False)
-    if not user:
-        raise HTTPException(status_code=400, detail="Could not find user for API key")
-    for i, key in enumerate(user.api_keys):
-        if key.client_id == key_updates.client_id:
-            to_update = key_updates.model_dump(
-                exclude={"client_secret"},  # needs to be hashed separately
-                exclude_unset=True
-            )
-            if key_updates.client_secret:
-                to_update["hashed_client_secret"] = password_context.hash(key_updates.client_secret)
-            key = key.model_copy(update=to_update)
-            user.api_keys[i] = key
-            await user.save()
-            return key
-    raise HTTPException(status_code=400, detail="Could not find API key")
+@user_router.put("/api_key/update", dependencies=[app_admin, manage_users])
+async def update_api_key(
+        key_updates: UpdateAPIKey,
+        user_service: UserService = Depends(get_user_service),
+) -> APIKey:
+    """Admin Endpoint to update an API key for the specified user."""
+    return await user_service.update_api_key(key_updates)
 
 
-@user_router.post("/api_key/delete", dependencies=[app_admin, manage_users])
+@user_router.delete("/api_key/delete/{client_id}", dependencies=[app_admin, manage_users])
 async def delete_api_key(
-        client_id: str
+        client_id: str = Path(..., description="API key client ID"),
+        user_service: UserService = Depends(get_user_service),
 ) -> Message:
-    linked_user = await User.by_client_id(client_id)
-    linked_user.api_keys = [key for key in linked_user.api_keys if not key.client_id == client_id]
-    linked_user.save()
-    return Message.success(message="API key deleted.")
+    """Admin Endpoint to delete an API key for the specified user."""
+    return await user_service.delete_api_key(client_id)
 
 
 @user_router.post("/email_password_reset_link")
 @limiter.limit("5/minute")
-async def recover_password(request: Request, email: str) -> Message:
-    user = await User.by_email(email)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.source == "Basic" or user.password is not None:
-        await MagicLink.request_magic(identifier=user.id, _type=MagicType.recovery)
-        email_data = await generate_email(user, "recover_password")
-        send_email(email=email_data)
-    else:
-        raise HTTPException(status_code=400, detail="User is not authenticated via password.")
-    return Message(message="Password recovery email sent")
+async def recover_password(
+    request: Request,
+    email: str,
+    user_service: UserService = Depends(get_user_service),
+) -> Message:
+    return await user_service.recover_password(email)
 
 
 @user_router.post("/send_magic_link")
 @limiter.limit("5/minute")
-async def send_magic_link(request: Request, email: str) -> Message:
+async def send_magic_link(
+    request: Request,
+    email: str,
+    user_service: UserService = Depends(get_user_service),
+) -> Message:
     if not settings.magic_link_enabled:
         raise HTTPException(status_code=403, detail="Magic link disabled")
-    user = await User.by_email(email)
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.source.lower() == "basic" or user.password is not None:
-        await MagicLink.request_magic(identifier=user.id, _type=MagicType.magic)
-        email_data = await generate_email(user, "magic_link")
-        send_email(email=email_data)
-    else:
-        raise HTTPException(status_code=400, detail="User is not authenticated via password.")
-    return Message(message="Magic link email sent")
+    return await user_service.send_magic_link(email)
 
 
-@user_router.post("/reset_password", dependencies=[])
+@user_router.post("/reset_password")
 async def reset_password(
-        email: str = Form(...),
         new_password: str = Form(...),
-        token=Depends(validate_link_token)
+        token=Depends(validate_link_token),
+        user_service: UserService = Depends(get_user_service),
 ) -> Message:
-    user = await User.by_email(email)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if user.source == "Basic":
-        hashed_password = get_hashed_password(new_password)
-        if hashed_password in user.last_passwords:
-            raise HTTPException(400, "Unable to reset password: User has already used this password.")
-        user.password = hashed_password
-        await user.save()
-        return Message.success("Password reset successfully.")
-    else:
-        raise HTTPException(400, "Unable to reset password: User is not authenticated via password.")
+    return await user_service.reset_password(new_password, token.sub)
+
+
+@user_router.post("/test_email_task", dependencies=[app_admin])
+async def test_email_task(
+    email: str = Body(...),
+    token: str = Body(...),
+) -> Message:
+    """Test endpoint to manually trigger email task"""
+    try:
+        # Send the task
+        message = send_reset_password_email_task.send(email, token)
+        return Message(message=f"Task queued successfully. Message ID: {message.message_id}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to queue task: {str(e)}")
+
+"""
+My User Management
+"""
+
+@user_router.get("/me")
+async def profile(
+        me: MyUserService = Depends(get_self_user_service)
+) -> UserBase:
+    """Retrieve current user's metadata"""
+    return await me.my_profile()
+
+
+@user_router.put("/me/update_password")
+async def update_password(
+        body: UpdatePassword,
+        me: MyUserService = Depends(get_self_user_service),
+) -> Message:
+    """Update password endpoint"""
+    return await me.update_my_password(body.current_password, body.new_password)
+
+
+@user_router.put("/me/update", dependencies=[app_admin, manage_users])
+async def update_my_user(
+        me: MyUserService = Depends(get_self_user_service),
+        user_update: UserBase = Body(...),
+) -> UserBase:
+    """Update user endpoint"""
+    return await me.update_my_user(user_update)

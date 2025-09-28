@@ -41,7 +41,7 @@ class Settings(BaseSettings):
         magic_link_refresh_seconds: Magic link refresh interval in seconds
     """
     app_name: str = "your_backend_app"
-    app_domain: str = "localhost:5151"
+    app_domain: str = "http://localhost:5151"
     mount_point: str = "v1"
     db_name: str = "your_backend_app_backend"
     db_conn_str: str = "mongodb://localhost:27017/"
@@ -56,7 +56,6 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_port: int = 587
     smtp_host: str = "smtp.sendgrid.net"
-
     email_reset_token_expire_minutes: int = 60
     refresh_token_expire_minutes: int = 60
     token_expire_minutes: int = 30
@@ -65,9 +64,11 @@ class Settings(BaseSettings):
     admin_users: str = "ajordanbojanic@gmail.com"
     user_default_password: str = "change_me"
     master_psk: str = "change_me"
-
     google_client_id: str = "change_me"
     magic_link_refresh_seconds: int = 60
+    redis_url: str = "redis://localhost:6379"
+    dramatiq_broker_url: str = "redis://localhost:6379"
+    dramatiq_namespace: str = "your_backend_app"
 
     class Config:
         env_file = '.env'
