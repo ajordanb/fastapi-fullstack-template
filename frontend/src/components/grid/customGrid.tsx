@@ -16,7 +16,9 @@ import {
   NumberFilterModule,
   DateFilterModule,
     PaginationModule,
-    RowSelectionModule
+    RowSelectionModule,
+
+
 } from "ag-grid-community";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -150,7 +152,7 @@ function CustomGrid<T>({
     () => ({
       resizable: true,
       suppressMovable: true,
-      filter: true, // Enable filtering for all columns by default
+      filter: 'agTextColumnFilter', // Use free text filter instead of enterprise SetFilter
       floatingFilter: false, // Disable floating filters to avoid conflicts
       ...propDefaultColDef,
     }),

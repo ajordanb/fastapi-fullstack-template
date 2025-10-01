@@ -73,6 +73,7 @@ export const dramatiqApi = (): DramatiqApi => {
                 });
             },
             enabled: isAuthenticated,
+            refetchInterval: 5000,
         });
 
     const useJobByIdQuery = (messageId: string, enabled: boolean = true): UseQueryResult<Job, Error> =>
@@ -91,6 +92,7 @@ export const dramatiqApi = (): DramatiqApi => {
                 return await authGet<DashboardData>(`${baseUrl}/dashboard`);
             },
             enabled: isAuthenticated,
+            refetchInterval: 5000,
         });
 
     const useHealthQuery = (): UseQueryResult<HealthStatus, Error> =>

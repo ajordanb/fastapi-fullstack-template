@@ -1,7 +1,8 @@
 import * as React from "react"
 import {
     ArrowUpCircleIcon,
-    UserIcon
+    UserIcon,
+    BriefcaseIcon
 } from "lucide-react"
 
 import {NavAdmin} from "@/components/pages/dashboard/navAdmin.tsx"
@@ -29,9 +30,20 @@ const data = {
                     title: "Manage Users",
                     url: "/admin/users",
                 },
-                      {
+                {
                     title: "Manage Roles",
                     url: "/admin/roles",
+                }
+            ]
+        },
+        {
+            title: "Jobs",
+            url: "#",
+            icon: BriefcaseIcon,
+            items: [
+                {
+                    title: "Job Monitoring",
+                    url: "/admin/jobs",
                 }
             ]
         },
