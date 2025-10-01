@@ -7,10 +7,15 @@ from app.models.user.model import User
 from app.services.auth.auth_service import SecurityService, AuthService
 from app.services.dramatiq.dramatiq_service import DramatiqService
 from app.services.email.email import EmailService
+from app.services.role.role_service import RoleService
 from app.services.user.user_service import UserService, MyUserService
 
 T = TypeVar('T')
 
+
+def get_role_service() -> RoleService:
+    """Dependency to get role service instance"""
+    return RoleService()
 
 def get_email_service():
     return EmailService()

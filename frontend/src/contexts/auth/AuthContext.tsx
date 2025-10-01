@@ -4,6 +4,9 @@ import {
     _formPostRequest,
     _jsonPostRequest,
     _postRequest,
+    _getRequest,
+    _putRequest,
+    _deleteRequest,
     decodeToken,
 } from "./_authHelpers";
 import type {AuthContextType, AuthPostOptions, AuthResponse, SocialLoginParams, TokenData} from "./model";
@@ -176,18 +179,13 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
         }
     };
 
-    async function authPost<T = any>(
-        url: string,
-        body?: any,
+    async function handleAuthRequest<T = any>(
+        requestFn: () => Promise<Response>,
+        retryFn: (token: string) => Promise<Response>,
         options: AuthPostOptions = {}
     ): Promise<T | Blob | AuthResponse<T>> {
         try {
-            let response = await _postRequest(
-                url,
-                body,
-                accessToken, // Use the state variable directly
-                options.params
-            );
+            let response = await requestFn();
 
             // Handle 401 with retry
             if (response.status === 401) {
@@ -197,13 +195,8 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
                     throw new Error("Failed to refresh token");
                 }
 
-                // Retry with the new token from the response
-                response = await _postRequest(
-                    url,
-                    body,
-                    tokenData.accessToken, // Use the fresh token from the response
-                    options.params
-                );
+                // Retry with the new token
+                response = await retryFn(tokenData.accessToken);
             }
 
             // Handle other error statuses
@@ -238,6 +231,52 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
         }
     }
 
+    async function authPost<T = any>(
+        url: string,
+        body?: any,
+        options: AuthPostOptions = {}
+    ): Promise<T | Blob | AuthResponse<T>> {
+        return handleAuthRequest<T>(
+            () => _postRequest(url, body, accessToken, options.params),
+            (token) => _postRequest(url, body, token, options.params),
+            options
+        );
+    }
+
+    async function authGet<T = any>(
+        url: string,
+        options: AuthPostOptions = {}
+    ): Promise<T | Blob | AuthResponse<T>> {
+        return handleAuthRequest<T>(
+            () => _getRequest(url, accessToken, options.params),
+            (token) => _getRequest(url, token, options.params),
+            options
+        );
+    }
+
+    async function authPut<T = any>(
+        url: string,
+        body?: any,
+        options: AuthPostOptions = {}
+    ): Promise<T | Blob | AuthResponse<T>> {
+        return handleAuthRequest<T>(
+            () => _putRequest(url, body, accessToken, options.params),
+            (token) => _putRequest(url, body, token, options.params),
+            options
+        );
+    }
+
+    async function authDelete<T = any>(
+        url: string,
+        options: AuthPostOptions = {}
+    ): Promise<T | Blob | AuthResponse<T>> {
+        return handleAuthRequest<T>(
+            () => _deleteRequest(url, accessToken, options.params),
+            (token) => _deleteRequest(url, token, options.params),
+            options
+        );
+    }
+
     return (
         <AuthContext.Provider
             value={{
@@ -249,6 +288,9 @@ export function AuthProvider({children}: { children: React.ReactNode }) {
                 hasRole,
                 hasScope,
                 authPost,
+                authGet,
+                authPut,
+                authDelete,
                 socialLogin,
                 register
             }}

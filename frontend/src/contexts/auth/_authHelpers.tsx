@@ -70,7 +70,7 @@ async function _postRequest(
     };
     if (token) {
         headers["Authorization"] = `Bearer ${token}`;
-    } 
+    }
 
     const req_url = params ? apiUrl + url + '?' + new URLSearchParams(params) : apiUrl + url;
     return fetch(req_url, {
@@ -80,7 +80,62 @@ async function _postRequest(
     });
 }
 
-export { _formPostRequest, _jsonPostRequest, decodeToken, _postRequest };
+async function _getRequest(
+    url: string,
+    token?: string | null,
+    params?: Record<string, any>,
+): Promise<Response> {
+    const headers: HeadersInit = {};
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const req_url = params ? apiUrl + url + '?' + new URLSearchParams(params) : apiUrl + url;
+    return fetch(req_url, {
+        method: "GET",
+        headers,
+    });
+}
+
+async function _putRequest(
+    url: string,
+    body: Record<string, any>,
+    token?: string | null,
+    params?: Record<string, any>,
+): Promise<Response> {
+    const headers: HeadersInit = {
+        "Content-Type": "application/json",
+    };
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const req_url = params ? apiUrl + url + '?' + new URLSearchParams(params) : apiUrl + url;
+    return fetch(req_url, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(body),
+    });
+}
+
+async function _deleteRequest(
+    url: string,
+    token?: string | null,
+    params?: Record<string, any>,
+): Promise<Response> {
+    const headers: HeadersInit = {};
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const req_url = params ? apiUrl + url + '?' + new URLSearchParams(params) : apiUrl + url;
+    return fetch(req_url, {
+        method: "DELETE",
+        headers,
+    });
+}
+
+export { _formPostRequest, _jsonPostRequest, decodeToken, _postRequest, _getRequest, _putRequest, _deleteRequest };
 
 
 

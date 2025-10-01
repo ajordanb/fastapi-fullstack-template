@@ -21,6 +21,19 @@ export interface AuthContextType {
     body?: any,
     options?: AuthPostOptions
   ) => Promise<T | Blob | AuthResponse<T>>;
+  authGet: <T = any>(
+    url: string,
+    options?: AuthPostOptions
+  ) => Promise<T | Blob | AuthResponse<T>>;
+  authPut: <T = any>(
+    url: string,
+    body?: any,
+    options?: AuthPostOptions
+  ) => Promise<T | Blob | AuthResponse<T>>;
+  authDelete: <T = any>(
+    url: string,
+    options?: AuthPostOptions
+  ) => Promise<T | Blob | AuthResponse<T>>;
 }
 
 export interface AuthPostOptions {
