@@ -10,6 +10,7 @@ from dramatiq.results import Results
 from loguru import logger
 
 from app.core.config import settings
+from app.core.job_tracker_middleware import JobTrackerMiddleware
 
 
 async def async_startup():
@@ -30,14 +31,20 @@ class CustomAsyncIO(AsyncIO):
 
 try:
     broker = RedisBroker(url=settings.dramatiq_broker_url, namespace=settings.dramatiq_namespace)
-    result_backend = RedisBackend(url=settings.dramatiq_broker_url)
+    result_backend = RedisBackend(url=settings.dramatiq_broker_url, namespace=f"{settings.dramatiq_namespace}-results")
+    job_tracker = JobTrackerMiddleware(
+        redis_url=settings.dramatiq_broker_url,
+        namespace=settings.dramatiq_namespace,
+        ttl=86400  # 24 hours
+    )
     broker.add_middleware(AgeLimit(max_age=3600000))  # 1 hour
     broker.add_middleware(TimeLimit(time_limit=600000))  # 10 minutes
     broker.add_middleware(Retries(max_retries=3))
-    broker.add_middleware(Results(backend=result_backend))
     broker.add_middleware(CustomAsyncIO())
+    broker.add_middleware(Results(backend=result_backend))
+    broker.add_middleware(job_tracker)
     dramatiq.set_broker(broker)
-    logger.info("Dramatiq broker configured successfully with Redis results backend")
+    logger.info("Dramatiq broker configured successfully with job tracking and results backend")
 
 except Exception as e:
     logger.error(f"Failed to setup Dramatiq broker: {e}")

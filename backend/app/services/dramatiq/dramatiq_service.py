@@ -77,13 +77,49 @@ class DramatiqService:
     def _get_message_key(self, message_id: str) -> str:
         return f"{self.namespace}:message:{message_id}"
 
+    def _get_job_key(self, message_id: str) -> str:
+        """Get key for tracked job data"""
+        return f"{self.namespace}:job:{message_id}"
+
+    def _get_completed_jobs_set_key(self) -> str:
+        """Get key for completed jobs sorted set"""
+        return f"{self.namespace}:jobs:completed"
+
+    async def _get_completed_jobs(self, limit: int = 100) -> List[DramatiqJob]:
+        """Get completed jobs from job tracker"""
+        try:
+            redis_client = self._get_redis_client()
+            completed_key = self._get_completed_jobs_set_key()
+
+            # Get most recent completed job IDs
+            message_ids = redis_client.zrevrange(completed_key, 0, limit - 1)
+            jobs = []
+
+            for message_id in message_ids:
+                job_key = self._get_job_key(message_id)
+                job_data = redis_client.get(job_key)
+
+                if job_data:
+                    try:
+                        job_dict = json.loads(job_data)
+                        jobs.append(DramatiqJob(job_dict))
+                    except json.JSONDecodeError as e:
+                        logger.warning(f"Failed to parse job {message_id}: {e}")
+                        continue
+
+            return jobs
+
+        except Exception as e:
+            logger.error(f"Failed to get completed jobs: {e}")
+            return []
+
     async def get_all_jobs(self, queue_name: str = "default", limit: int = 100) -> List[DramatiqJob]:
-        """Get all jobs from a specific queue"""
+        """Get all jobs from a specific queue, including pending and completed jobs"""
         try:
             redis_client = self._get_redis_client()
             queue_key = self._get_queue_key(queue_name)
 
-            # Get jobs from queue
+            # Get pending jobs from queue
             job_data_list = redis_client.lrange(queue_key, 0, limit - 1)
             jobs = []
 
@@ -96,7 +132,16 @@ class DramatiqService:
                     logger.warning(f"Failed to parse job data: {e}")
                     continue
 
-            return jobs
+            # Get completed jobs from tracker
+            completed_jobs = await self._get_completed_jobs(limit=limit)
+
+            # Filter by queue if needed
+            if queue_name and queue_name != "default":
+                completed_jobs = [j for j in completed_jobs if j.queue_name == queue_name]
+
+            jobs.extend(completed_jobs)
+
+            return jobs[:limit]
         except Exception as e:
             logger.error(f"Failed to get jobs: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to retrieve jobs: {str(e)}")

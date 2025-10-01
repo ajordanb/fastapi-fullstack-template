@@ -35,6 +35,16 @@ services:
       - "6379:6379"
     restart: unless-stopped
 
+  redis-commander:
+    image: ghcr.io/joeferner/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   mongodb:
     image: mongo:7
     ports:
