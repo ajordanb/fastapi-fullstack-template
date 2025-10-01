@@ -1,10 +1,9 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, Query, Depends, Path
-from app.models.role.model import RoleOut, RoleBase, Role
+from fastapi import APIRouter, Query, Depends, Path
+from app.models.role.model import RoleOut, RoleBase
 from app.models.user.model import User
 from app.models.util.model import Message
 from app.services.role.role_service import RoleService
-from app.tasks.ensure_ri_delete_role import ensure_ri_delete_role
 from app.utills.dependencies import CheckScope, admin_access, get_role_service
 
 role_router = APIRouter(tags=["User Role Management"], prefix="/role", dependencies=[Depends(admin_access)])
@@ -54,8 +53,4 @@ async def delete_role(
         role_id: str = Path(..., description="Role ID"),
         role_service: RoleService = Depends(get_role_service)
 ) -> Message:
-    role = await Role.by_id(role_id)
-    if not role:
-        raise HTTPException(status_code=404, detail="Role not found")
-    await ensure_ri_delete_role(role_id)
     return await role_service.delete_role(role_id)

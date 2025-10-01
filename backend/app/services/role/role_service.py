@@ -3,7 +3,9 @@ from fastapi import HTTPException
 from starlette import status
 
 from app.models.role.model import Role, RoleBase, RoleOut
+from app.models.user.model import User
 from app.models.util.model import Message
+from app.tasks.background_tasks import ensure_ri_delete_role
 
 
 class RoleService:
@@ -65,15 +67,18 @@ class RoleService:
         return RoleOut.model_validate(updated_role.model_dump())
 
     async def delete_role(self, role_id: str) -> Message:
-        """Delete a role"""
+        """Delete a role with background referential integrity cleanup"""
         role = await Role.by_id(role_id)
         if not role:
             raise HTTPException(status_code=404, detail="Role not found")
-
-        # Note: Role deletion should handle referential integrity
-        # This should be done through the existing ensure_ri_delete_role task
+        user_count = await User.count_documents({"roles": role_id})
         await role.delete()
-        return Message(message="Role deleted successfully")
+        # Start background cleanup task
+        ensure_ri_delete_role.send(role_id)
+        if user_count > 0:
+            return Message(message=f"Role deleted successfully. Removing from {user_count} users in background.")
+        else:
+            return Message(message="Role deleted successfully.")
 
     async def role_exists(self, role_id: str) -> bool:
         """Check if a role exists by ID"""
