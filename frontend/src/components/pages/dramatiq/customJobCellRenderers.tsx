@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { MoreHorizontal, Eye, RotateCcw, XCircle } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import { format } from 'date-fns'
 
 interface JobStatus {
   status: 'pending' | 'running' | 'completed' | 'failed'
@@ -43,22 +43,22 @@ export function MessageIdCell({ messageId }: MessageIdCellProps) {
   )
 }
 
-interface CreatedAtCellProps {
-  createdAt: string | null
+interface CompletedAtCellProps {
+  completedAt: string | null
 }
 
-export function CreatedAtCell({ createdAt }: CreatedAtCellProps) {
-  if (!createdAt) return <span className="text-muted-foreground">-</span>
+export function CompletedAtCell({ completedAt }: CompletedAtCellProps) {
+  if (!completedAt) return <span className="text-muted-foreground">-</span>
 
   try {
-    const timeAgo = formatDistanceToNow(new Date(createdAt), { addSuffix: true })
+    const formattedDate = format(new Date(completedAt), 'MM/dd/yyyy HH:mm:ss')
     return (
-      <span className="text-sm" title={createdAt}>
-        {timeAgo}
+      <span className="text-sm font-mono" title={completedAt}>
+        {formattedDate}
       </span>
     )
   } catch {
-    return <span className="text-sm">{createdAt}</span>
+    return <span className="text-sm">{completedAt}</span>
   }
 }
 

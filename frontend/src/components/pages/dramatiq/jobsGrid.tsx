@@ -4,7 +4,7 @@ import { type Job } from '@/api/dramatiq/model'
 import {
   StatusBadge,
   MessageIdCell,
-  CreatedAtCell,
+  CompletedAtCell,
   ActionButtons,
 } from './customJobCellRenderers'
 import CustomGrid from "@/components/grid/customGrid.tsx";
@@ -57,11 +57,11 @@ export function JobsGrid({
         width: 130,
       },
       {
-        headerName: 'Created',
-        field: 'created_at',
-        cellRenderer: (params: any) => <CreatedAtCell createdAt={params.value} />,
+        headerName: 'Completed',
+        field: 'completed_at',
+        cellRenderer: (params: any) => <CompletedAtCell completedAt={params.value} />,
         sort: 'desc',
-        width: 180,
+        width: 200,
       },
       {
         headerName: 'Retries',
