@@ -71,7 +71,7 @@ class RoleService:
         role = await Role.by_id(role_id)
         if not role:
             raise HTTPException(status_code=404, detail="Role not found")
-        user_count = await User.count_documents({"roles": role_id})
+        user_count = await User.find({"roles": role_id}).count()
         await role.delete()
         # Start background cleanup task
         ensure_ri_delete_role.send(role_id)

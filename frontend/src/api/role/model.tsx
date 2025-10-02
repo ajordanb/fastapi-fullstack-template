@@ -12,7 +12,8 @@ export interface RoleApi {
 }
 
 export interface Role {
-    id: string;
+    id?: string;
+    _id?: string; // Backend returns _id due to MongoDB/Pydantic alias
     name: string;
     description: string;
     created_by: string;

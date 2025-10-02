@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
     useMutation,
     useQuery,
+    useQueryClient,
     type UseQueryResult,
 } from "@tanstack/react-query";
 import type {
@@ -14,6 +15,7 @@ import type {
 
 export const roleApi = (): RoleApi => {
     const { authGet, authPost, authPut, authDelete, isAuthenticated } = useAuth();
+    const queryClient = useQueryClient();
     const baseUrl = "role";
 
     // Query hooks
@@ -42,20 +44,30 @@ export const roleApi = (): RoleApi => {
         mutationFn: async (roleData) => authPost<Role>(
             `${baseUrl}/create`,
             roleData
-        )
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["allRoles"] });
+        }
     });
 
     const updateRole = useMutation<Role, Error, RoleUpdateRequest>({
         mutationFn: async ({ id, ...roleData }) => authPut<Role>(
             `${baseUrl}/update/${id}`,
             roleData
-        )
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["allRoles"] });
+            queryClient.invalidateQueries({ queryKey: ["roleById"] });
+        }
     });
 
     const deleteRole = useMutation<Message, Error, string>({
         mutationFn: async (roleId) => authDelete<Message>(
             `${baseUrl}/delete/${roleId}`
-        )
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["allRoles"] });
+        }
     });
 
     return {

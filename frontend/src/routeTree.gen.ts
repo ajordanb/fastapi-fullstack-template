@@ -25,6 +25,7 @@ import { Route as IndexImport } from './routes/index'
 import { Route as AuthenticatedManagerReportsImport } from './routes/_authenticated/manager/reports'
 import { Route as AuthenticatedManagerLayoutImport } from './routes/_authenticated/manager/_layout'
 import { Route as AuthenticatedAdminUsersImport } from './routes/_authenticated/admin/users'
+import { Route as AuthenticatedAdminRolesImport } from './routes/_authenticated/admin/roles'
 import { Route as AuthenticatedAdminJobsImport } from './routes/_authenticated/admin/jobs'
 import { Route as AuthenticatedAdminLayoutImport } from './routes/_authenticated/admin/_layout'
 
@@ -117,6 +118,12 @@ const AuthenticatedManagerLayoutRoute = AuthenticatedManagerLayoutImport.update(
 const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+
+const AuthenticatedAdminRolesRoute = AuthenticatedAdminRolesImport.update({
+  id: '/roles',
+  path: '/roles',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 
@@ -219,6 +226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminJobsImport
       parentRoute: typeof AuthenticatedAdminImport
     }
+    '/_authenticated/admin/roles': {
+      id: '/_authenticated/admin/roles'
+      path: '/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AuthenticatedAdminRolesImport
+      parentRoute: typeof AuthenticatedAdminImport
+    }
     '/_authenticated/admin/users': {
       id: '/_authenticated/admin/users'
       path: '/users'
@@ -255,12 +269,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminLayoutRoute: typeof AuthenticatedAdminLayoutRoute
   AuthenticatedAdminJobsRoute: typeof AuthenticatedAdminJobsRoute
+  AuthenticatedAdminRolesRoute: typeof AuthenticatedAdminRolesRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminLayoutRoute: AuthenticatedAdminLayoutRoute,
   AuthenticatedAdminJobsRoute: AuthenticatedAdminJobsRoute,
+  AuthenticatedAdminRolesRoute: AuthenticatedAdminRolesRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
 }
 
@@ -306,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/validateMagicLink': typeof ValidateMagicLinkRoute
   '/admin': typeof AuthenticatedAdminLayoutRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
+  '/admin/roles': typeof AuthenticatedAdminRolesRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/manager': typeof AuthenticatedManagerLayoutRoute
   '/manager/reports': typeof AuthenticatedManagerReportsRoute
@@ -323,6 +340,7 @@ export interface FileRoutesByTo {
   '/validateMagicLink': typeof ValidateMagicLinkRoute
   '/admin': typeof AuthenticatedAdminLayoutRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
+  '/admin/roles': typeof AuthenticatedAdminRolesRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/manager': typeof AuthenticatedManagerLayoutRoute
   '/manager/reports': typeof AuthenticatedManagerReportsRoute
@@ -342,6 +360,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/admin/_layout': typeof AuthenticatedAdminLayoutRoute
   '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRoute
+  '/_authenticated/admin/roles': typeof AuthenticatedAdminRolesRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/manager': typeof AuthenticatedManagerRouteWithChildren
   '/_authenticated/manager/_layout': typeof AuthenticatedManagerLayoutRoute
@@ -362,6 +381,7 @@ export interface FileRouteTypes {
     | '/validateMagicLink'
     | '/admin'
     | '/admin/jobs'
+    | '/admin/roles'
     | '/admin/users'
     | '/manager'
     | '/manager/reports'
@@ -378,6 +398,7 @@ export interface FileRouteTypes {
     | '/validateMagicLink'
     | '/admin'
     | '/admin/jobs'
+    | '/admin/roles'
     | '/admin/users'
     | '/manager'
     | '/manager/reports'
@@ -395,6 +416,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/admin/_layout'
     | '/_authenticated/admin/jobs'
+    | '/_authenticated/admin/roles'
     | '/_authenticated/admin/users'
     | '/_authenticated/manager'
     | '/_authenticated/manager/_layout'
@@ -484,6 +506,7 @@ export const routeTree = rootRoute
       "children": [
         "/_authenticated/admin/_layout",
         "/_authenticated/admin/jobs",
+        "/_authenticated/admin/roles",
         "/_authenticated/admin/users"
       ]
     },
@@ -493,6 +516,10 @@ export const routeTree = rootRoute
     },
     "/_authenticated/admin/jobs": {
       "filePath": "_authenticated/admin/jobs.tsx",
+      "parent": "/_authenticated/admin"
+    },
+    "/_authenticated/admin/roles": {
+      "filePath": "_authenticated/admin/roles.tsx",
       "parent": "/_authenticated/admin"
     },
     "/_authenticated/admin/users": {
