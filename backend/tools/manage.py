@@ -4,8 +4,13 @@ import signal
 import sys
 import time
 from pathlib import Path
+from dotenv import load_dotenv
 
 import questionary
+
+# Load environment variables from .env file
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(env_path)
 
 
 def start_local_redis():
