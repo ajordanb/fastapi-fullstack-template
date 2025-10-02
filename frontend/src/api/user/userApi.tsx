@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
     useMutation,
     useQuery,
+    useQueryClient,
     type UseQueryResult,
 } from "@tanstack/react-query";
 import type {
@@ -18,6 +19,7 @@ import type {
 
 export const userApi = (): UserApi => {
     const { authGet, authPost, authPut, authDelete, isAuthenticated } = useAuth();
+    const queryClient = useQueryClient();
     const baseUrl = "user";
 
     // Query hooks
@@ -88,20 +90,31 @@ export const userApi = (): UserApi => {
         mutationFn: async (userData) => authPost<User>(
             `${baseUrl}/register`,
             userData
-        )
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+        }
     });
 
     const updateUser = useMutation<User, Error, User>({
         mutationFn: async (userData) => authPut<User>(
             `${baseUrl}/update`,
             userData
-        )
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+            queryClient.invalidateQueries({ queryKey: ["userById"] });
+            queryClient.invalidateQueries({ queryKey: ["userByEmail"] });
+        }
     });
 
     const deleteUser = useMutation<Message, Error, string>({
         mutationFn: async (userId) => authDelete<Message>(
             `${baseUrl}/delete/${userId}`
-        )
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+        }
     });
 
     const updateMyPassword = useMutation<Message, Error, UpdatePasswordRequest>({
@@ -123,20 +136,35 @@ export const userApi = (): UserApi => {
         mutationFn: async ({ email, api_key }) => authPost<ApiKey>(
             `${baseUrl}/api_key/create`,
             { ...api_key, email }
-        )
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+            queryClient.invalidateQueries({ queryKey: ["userById"] });
+            queryClient.invalidateQueries({ queryKey: ["userByEmail"] });
+        }
     });
 
     const updateApiKey = useMutation<ApiKey, Error, UpdateApiKeyRequest>({
         mutationFn: async (keyData) => authPut<ApiKey>(
             `${baseUrl}/api_key/update`,
             keyData
-        )
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+            queryClient.invalidateQueries({ queryKey: ["userById"] });
+            queryClient.invalidateQueries({ queryKey: ["userByEmail"] });
+        }
     });
 
     const deleteApiKey = useMutation<Message, Error, string>({
         mutationFn: async (clientId) => authDelete<Message>(
             `${baseUrl}/api_key/delete/${clientId}`
-        )
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+            queryClient.invalidateQueries({ queryKey: ["userById"] });
+            queryClient.invalidateQueries({ queryKey: ["userByEmail"] });
+        }
     });
 
     return {

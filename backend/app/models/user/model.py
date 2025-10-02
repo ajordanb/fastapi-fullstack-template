@@ -31,12 +31,25 @@ class PSK(Access):
     psk: str = Field(description="Pre-shared key for authentication")
 
 
-class CreateAPIKey(APIKey):
-    hashed_client_secret: str = Field(description="Hashed client secret for new API key creation")
+class CreateAPIKey(Access):
+    """Model for creating a new API key with unhashed secret"""
+    client_id: str = Field(description="Unique identifier for the API client")
+    client_secret: str = Field(description="Unhashed client secret (will be hashed by service)")
 
 
-class UpdateAPIKey(APIKey):
-    pass
+class UpdateAPIKey(BaseModel):
+    """Model for updating an API key - all fields optional except client_id"""
+    client_id: str = Field(description="Unique identifier for the API client")
+    client_secret: Optional[str] = Field(default=None, description="New client secret (will be hashed if provided)")
+    scopes: Optional[List[str]] = Field(default=None, description="List of permission scopes granted")
+    active: Optional[bool] = Field(default=None, description="Whether the access is currently active")
+
+
+class CreateAPIKeyRequest(BaseModel):
+    """Request model for creating an API key - matches frontend format"""
+    email: str = Field(description="Email of the user to create API key for")
+    scopes: List[str] = Field(default_factory=list, description="List of permission scopes granted")
+    active: bool = Field(default=True, description="Whether the API key is active")
 
 
 class UserBase(BaseModel):
@@ -83,6 +96,19 @@ class UpdatePassword(BaseModel):
     """Update user password"""
     current_password: str = Field(description="Current password for verification")
     new_password: str = Field(description="New password to set for the user")
+
+
+class UserUpdateRequest(BaseModel):
+    """User update request model - accepts role names instead of ObjectIds"""
+    id: PydanticObjectId = Field(description="User ID to update")
+    username: Optional[str] = Field(None, alias="email", description="Username for the user account")
+    email: str = Field(description="Email address of the user")
+    name: str | None = Field(None, description="Full name of the user")
+    source: str = Field(default="", description="Source system where the user originated")
+    email_confirmed: bool = Field(default=False, description="Whether the user's email has been confirmed")
+    is_active: bool = Field(default=True, description="Whether the user account is active")
+    roles: List[str] = Field(default_factory=list, description="List of role names (will be converted to ObjectIds)")
+    api_keys: List[APIKey] = Field(default_factory=list, description="List of API keys associated with the user")
 
 
 class User(Document, UserAuth):

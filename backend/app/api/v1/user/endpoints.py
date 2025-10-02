@@ -1,9 +1,11 @@
 from typing import List
+import secrets
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Body, Form, Request, BackgroundTasks, Path
 
 from app.core.config import settings
-from app.models.user.model import UserAuth, UpdatePassword, UserBase, APIKey, UpdateAPIKey, UserOut
+from app.models.user.model import UserAuth, UpdatePassword, UserBase, APIKey, UpdateAPIKey, UserOut, UserUpdateRequest, CreateAPIKeyRequest, CreateAPIKey
 from app.models.util.model import Message
 from app.services.user.user_service import UserService, MyUserService
 from app.tasks.background_tasks import send_reset_password_email_task
@@ -62,9 +64,9 @@ async def by_email(
 
 @user_router.put("/update", dependencies=[app_admin, manage_users])
 async def update_user(
-        user_update: UserBase,
+        user_update: UserUpdateRequest,
         user_service: UserService = Depends(get_user_service),
-) -> UserBase:
+) -> UserOut:
     """Admin endpoint to update a user"""
     return await user_service.update_user(user_update)
 
@@ -80,12 +82,22 @@ async def delete_user(
 
 @user_router.post("/api_key/create", dependencies=[app_admin, manage_users])
 async def create_api_key(
-        api_key: APIKey,
-        email: str = Body(...),
+        request: CreateAPIKeyRequest,
         user_service: UserService = Depends(get_user_service),
 ) -> APIKey:
     """Admin Endpoint to create an API key for the specified user."""
-    return await user_service.create_api_key(api_key, email)
+    # Generate client_id and client_secret
+    client_id = str(uuid.uuid4())
+    client_secret = secrets.token_urlsafe(32)
+
+    # Create CreateAPIKey model with unhashed credentials
+    api_key = CreateAPIKey(
+        client_id=client_id,
+        client_secret=client_secret,  # Service will hash this
+        scopes=request.scopes,
+        active=request.active
+    )
+    return await user_service.create_api_key(api_key, request.email)
 
 
 @user_router.put("/api_key/update", dependencies=[app_admin, manage_users])

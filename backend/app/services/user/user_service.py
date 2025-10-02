@@ -6,7 +6,7 @@ from app.core.security.api import verify_password, get_hashed_password, password
 from app.models.auth.model import Token
 from app.models.magic_link.model import MagicLink, MagicType
 from app.models.role.model import Role
-from app.models.user.model import UserAuth, User, UserBase, UserOut, APIKey, UpdateAPIKey
+from app.models.user.model import UserAuth, User, UserBase, UserOut, APIKey, UpdateAPIKey, UserUpdateRequest, CreateAPIKey
 from app.models.util.model import Message
 from app.services.auth.auth_service import AuthService
 from app.services.email.email import EmailService
@@ -60,12 +60,30 @@ class UserService:
         send_welcome_email_task.send(user_email=email, token=token)
         return new_user
 
-    async def update_user(self, user_update: UserBase) -> UserBase:
+    async def update_user(self, user_update: UserUpdateRequest) -> UserOut:
         user = await self.get_user_by_id(user_update.id)
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
-        await user.update(user_update.model_dump(exclude_unset=True))
-        return user
+
+        # Convert role names to ObjectIds
+        role_ids = []
+        for role_name in user_update.roles:
+            role = await Role.by_name(role_name)
+            if not role:
+                raise HTTPException(status_code=404, detail=f"Role '{role_name}' not found")
+            role_ids.append(role.id)
+
+        # Update user fields directly
+        update_data = user_update.model_dump(exclude_unset=True, exclude={'roles', 'id'})
+        for field, value in update_data.items():
+            setattr(user, field, value)
+        user.roles = role_ids
+
+        await user.save()
+
+        # Return UserOut with full role details
+        user_roles = await user.user_roles()
+        return UserOut(**user.model_dump(exclude={'roles'}), roles=user_roles)
 
     async def delete_user(self, user_id: str) -> Message:
         user = await self.get_user_by_id(user_id)
@@ -102,7 +120,7 @@ class UserService:
         else:
             raise HTTPException(status_code=400, detail="User is not authenticated via password.")
 
-    async def create_api_key(self, api_key: APIKey, email: str) -> APIKey:
+    async def create_api_key(self, api_key: CreateAPIKey, email: str) -> APIKey:
         existing_api_key = await User.by_client_id(api_key.client_id, raise_on_zero=False)
         if existing_api_key:
             raise HTTPException(status_code=400, detail="API key already exists.")

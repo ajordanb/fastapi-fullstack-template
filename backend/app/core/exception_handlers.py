@@ -40,8 +40,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "type": error["type"]
         })
 
+    # Use repr to avoid loguru treating dict keys as template variables
     logger.warning(
-        f"Validation error on {request.method} {request.url.path}: {errors}",
+        f"Validation error on {request.method} {request.url.path}: {errors!r}",
         extra={"path": request.url.path, "errors": errors}
     )
 
@@ -81,7 +82,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONRe
 async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle all uncaught exceptions"""
     logger.error(
-        f"Unhandled exception on {request.method} {request.url.path}: {exc}",
+        f"Unhandled exception on {request.method} {request.url.path}: {exc!r}",
         exc_info=exc,
         extra={"path": request.url.path}
     )
@@ -109,8 +110,9 @@ async def pydantic_validation_handler(request: Request, exc: ValidationError) ->
             "type": error["type"]
         })
 
+    # Use repr to avoid loguru treating dict keys as template variables
     logger.warning(
-        f"Pydantic validation error on {request.method} {request.url.path}: {errors}",
+        f"Pydantic validation error on {request.method} {request.url.path}: {errors!r}",
         extra={"path": request.url.path, "errors": errors}
     )
 
