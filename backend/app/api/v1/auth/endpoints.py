@@ -12,17 +12,20 @@ from app.models.user.model import User
 from app.services.auth.auth_service import AuthService
 from app.utills.dependencies import get_auth_service, validate_refresh_token, validate_link_token
 
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+
 auth_router = APIRouter(tags=["Authentication"], prefix="/auth")
 
 
-# ISSUE 1: This line is incorrect - you can't define a dependency like this
-# auth_service: AuthService = Depends(get_auth_service)
-
 @auth_router.post("/token")
+@limiter.limit("10/minute")
 async def login_ep(
         request: Request,
         form: CustomOAuth2RequestForm = Depends(),
-        auth_service: AuthService = Depends(get_auth_service)  # FIXED: Move dependency to function parameter
+        auth_service: AuthService = Depends(get_auth_service)
 ) -> RefreshToken:
     if form.username and form.password:
         user = await password_authenticated_user(form)
@@ -72,9 +75,11 @@ async def login_ep(
 
 
 @auth_router.post("/social_login")
+@limiter.limit("10/minute")
 async def social_login_ep(
+        request: Request,
         req: SocialLoginRequest,
-        auth_service: AuthService = Depends(get_auth_service)  # FIXED: Add dependency parameter
+        auth_service: AuthService = Depends(get_auth_service)
 ) -> RefreshToken:
     email = await provider_map[req.provider](req.data, req.redirect_url)
     user = await User.by_email(email)
@@ -90,7 +95,6 @@ async def social_login_ep(
 
     scopes, user_role_names = await user.get_user_scopes_and_roles()
 
-    # OPTIMIZATION: Use create_token_pair for cleaner code
     tokens = auth_service.create_token_pair(
         subject=user.email,
         scopes=scopes,
@@ -112,14 +116,15 @@ async def social_login_ep(
 
 
 @auth_router.post("/refresh")
+@limiter.limit("20/minute")
 async def refresh(
+        request: Request,
         token_data: Token = Depends(validate_refresh_token),
-        auth_service: AuthService = Depends(get_auth_service)  # FIXED: Add dependency parameter
+        auth_service: AuthService = Depends(get_auth_service)
 ) -> RefreshToken:
     """Returns a new access token from a refresh token"""
     user = await User.by_email(token_data.sub)
 
-    # ISSUE 3: You should preserve the original token's scopes and roles
     # Get fresh scopes/roles from user or use the ones from the refresh token
     scopes, user_role_names = await user.get_user_scopes_and_roles()
 
@@ -149,9 +154,11 @@ async def refresh(
 
 
 @auth_router.post("/validate_magic_link")
+@limiter.limit("10/minute")
 async def validate_magic_link(
+        request: Request,
         token_data=Depends(validate_link_token),
-        auth_service: AuthService = Depends(get_auth_service)  # FIXED: Add dependency parameter
+        auth_service: AuthService = Depends(get_auth_service)
 ) -> RefreshToken:
     user = await User.by_email(token_data.sub)
     scopes, user_role_names = await user.get_user_scopes_and_roles()

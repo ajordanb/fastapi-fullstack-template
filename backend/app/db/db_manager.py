@@ -25,8 +25,8 @@ class DatabaseManager:
             if settings.db_conn_str.startswith("mongodb://localhost"):
                 self._client = motor.motor_asyncio.AsyncIOMotorClient(
                     settings.db_conn_str,
-                    maxPoolSize=10,
-                    minPoolSize=1,
+                    maxPoolSize=settings.db_max_pool_size,
+                    minPoolSize=settings.db_min_pool_size,
                     serverSelectionTimeoutMS=5000,
                     connectTimeoutMS=10000,
                     socketTimeoutMS=20000,
@@ -35,8 +35,8 @@ class DatabaseManager:
             else:
                 self._client = motor.motor_asyncio.AsyncIOMotorClient(
                     settings.db_conn_str,
-                    maxPoolSize=10,
-                    minPoolSize=1,
+                    maxPoolSize=settings.db_max_pool_size,
+                    minPoolSize=settings.db_min_pool_size,
                     serverSelectionTimeoutMS=5000,
                     connectTimeoutMS=10000,
                     socketTimeoutMS=20000,

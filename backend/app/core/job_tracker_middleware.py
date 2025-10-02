@@ -2,11 +2,17 @@
 Custom Dramatiq middleware to track job completion for dashboard monitoring.
 """
 import json
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Any, Optional
 import redis
 from dramatiq import Message, Middleware
 from loguru import logger
+
+try:
+    from datadog import statsd
+    DATADOG_AVAILABLE = True
+except ImportError:
+    DATADOG_AVAILABLE = False
 
 
 class JobTrackerMiddleware(Middleware):
@@ -40,13 +46,24 @@ class JobTrackerMiddleware(Middleware):
                 "queue_name": message.queue_name,
                 "args": message.args,
                 "kwargs": message.kwargs,
-                "completed_at": datetime.utcnow().isoformat(),
+                "completed_at": datetime.now(UTC).isoformat(),
             }
 
             if exception:
                 job_data["status"] = "failed"
                 job_data["failed_at"] = job_data["completed_at"]
                 job_data["error"] = str(exception)
+
+                # Send Datadog metric for failed job
+                if DATADOG_AVAILABLE:
+                    statsd.increment(
+                        'dramatiq.job.failed',
+                        tags=[
+                            f'actor:{message.actor_name}',
+                            f'queue:{message.queue_name}',
+                            f'namespace:{self.namespace}'
+                        ]
+                    )
             else:
                 job_data["status"] = "completed"
                 # Store result if it's JSON serializable
@@ -57,13 +74,24 @@ class JobTrackerMiddleware(Middleware):
                     except (TypeError, ValueError):
                         job_data["result"] = str(result)
 
+                # Send Datadog metric for completed job
+                if DATADOG_AVAILABLE:
+                    statsd.increment(
+                        'dramatiq.job.completed',
+                        tags=[
+                            f'actor:{message.actor_name}',
+                            f'queue:{message.queue_name}',
+                            f'namespace:{self.namespace}'
+                        ]
+                    )
+
             # Store job data
             job_key = self._get_job_key(message.message_id)
             self.redis_client.setex(job_key, self.ttl, json.dumps(job_data))
 
             # Add to completed set (sorted by timestamp)
             completed_key = self._get_completed_set_key()
-            score = datetime.utcnow().timestamp()
+            score = datetime.now(UTC).timestamp()
             self.redis_client.zadd(completed_key, {message.message_id: score})
 
             logger.debug(f"Tracked job completion: {message.message_id} ({job_data['status']})")

@@ -17,9 +17,58 @@ def start_local_redis():
     print("Dashboard available in 6379")
 
 
+def start_local_datadog():
+    """Start Datadog agent for local development"""
+    # Check if DD_API_KEY is set
+    if not os.getenv('DD_API_KEY'):
+        print("❌ DD_API_KEY environment variable not set!")
+        print("💡 Get your API key from: https://app.datadoghq.com/organization-settings/api-keys")
+        print("💡 Then set it: export DD_API_KEY=your_api_key")
+        return
+
+    os.system(
+        "docker compose -f datadog-docker-compose.yaml pull && docker compose -f datadog-docker-compose.yaml down"
+    )
+    os.system("docker compose -f datadog-docker-compose.yaml up -d")
+    print("✅ Datadog Agent started")
+    print("📍 APM: localhost:8126")
+    print("📍 StatsD: localhost:8125")
+    print("📍 Dashboard: https://app.datadoghq.com/")
+
+
+def start_monitoring_stack():
+    """Start Redis + Datadog for local development"""
+    print("🚀 Starting Monitoring Stack (Redis + Datadog)...")
+
+    # Check if DD_API_KEY is set
+    if not os.getenv('DD_API_KEY'):
+        print("❌ DD_API_KEY environment variable not set!")
+        print("💡 Get your API key from: https://app.datadoghq.com/organization-settings/api-keys")
+        print("💡 Then set it: export DD_API_KEY=your_api_key")
+        return
+
+    start_local_redis()
+    time.sleep(2)
+    start_local_datadog()
+    print("\n✅ Monitoring stack is running!")
+    print("📍 Redis: localhost:6379")
+    print("📍 Datadog APM: localhost:8126")
+    print("📍 Datadog Dashboard: https://app.datadoghq.com/")
+
+
 def start_development_stack():
     """Start the full development stack: Redis + API + Workers"""
     print("🚀 Starting Development Stack...")
+
+    # Ask if user wants to include Datadog
+    include_datadog = False
+    if os.getenv('DD_API_KEY'):
+        include_datadog = questionary.confirm(
+            "Start with Datadog monitoring? (DD_API_KEY is set)",
+            default=False
+        ).ask()
+    else:
+        print("💡 Tip: Set DD_API_KEY to enable Datadog monitoring option")
 
     # Store process references
     processes = []
@@ -41,11 +90,17 @@ def start_development_stack():
         start_local_redis()
         time.sleep(2)  # Give Redis time to start
 
-        # 2. Change to backend directory
+        # 2. Optionally start Datadog
+        if include_datadog:
+            print("📊 Starting Datadog agent...")
+            start_local_datadog()
+            time.sleep(2)
+
+        # 3. Change to backend directory
         backend_dir = Path(__file__).parent.parent
         os.chdir(backend_dir)
 
-        # 3. Start API in background
+        # 4. Start API in background
         print("🌐 Starting FastAPI server...")
         api_process = subprocess.Popen([
             sys.executable, "-m", "uvicorn",
@@ -57,7 +112,7 @@ def start_development_stack():
         processes.append(api_process)
         time.sleep(3)  # Give API time to start
 
-        # 4. Start Dramatiq workers
+        # 5. Start Dramatiq workers
         print("⚙️  Starting Dramatiq workers...")
         worker_process = subprocess.Popen([
             sys.executable, "-m", "dramatiq",
@@ -72,6 +127,8 @@ def start_development_stack():
         print("📍 API: http://127.0.0.1:8000")
         print("📍 API Docs: http://127.0.0.1:8000/docs")
         print("📍 Redis: localhost:6379")
+        if include_datadog:
+            print("📍 Datadog: https://app.datadoghq.com/")
         print("\n💡 Press Ctrl+C to stop all services")
 
         # Keep the script running
@@ -109,10 +166,12 @@ def start_workers_only():
 
 
 actions = {
-    "Local Redis": start_local_redis,
     "Development Stack (All)": start_development_stack,
     "API Only": start_api_only,
     "Workers Only": start_workers_only,
+    "Local Redis": start_local_redis,
+    "Local Datadog": start_local_datadog,
+    "Monitoring Stack (Redis + Datadog)": start_monitoring_stack,
 }
 
 

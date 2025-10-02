@@ -141,6 +141,7 @@ The frontend will be available at `http://localhost:5173`
 - **Database**: MongoDB with Beanie ODM and connection pooling
 - **Service Layer**: Clean architecture with service layer pattern
 - **Health Checks**: Built-in health monitoring endpoints
+- **Monitoring**: Datadog APM integration for traces, metrics, and logs
 - **Development Tools**: Integrated development stack management
 
 ### Frontend
@@ -156,6 +157,7 @@ The frontend will be available at `http://localhost:5173`
 - **Containerization**: Docker support for deployment
 - **Package Management**: UV for fast Python dependency management
 - **Background Processing**: Redis-backed task queue with monitoring
+- **Observability**: Datadog APM, metrics, and log collection
 - **Code Quality**: Integrated linting and formatting
 
 ## Development
@@ -198,6 +200,42 @@ This template follows modern software architecture patterns:
 - **Clean API Design**: RESTful endpoints with proper HTTP methods
 - **Type Safety**: End-to-end type safety from database to frontend
 
+## Monitoring & Observability
+
+This template includes Datadog integration for comprehensive application monitoring:
+
+### Datadog Setup
+
+1. **Sign up for Datadog**: Get your free account at [datadoghq.com](https://www.datadoghq.com/)
+
+2. **Get your API key**: Find it at https://app.datadoghq.com/organization-settings/api-keys
+
+3. **Configure environment variables**:
+```bash
+# Add to your .env file
+DD_API_KEY=your_datadog_api_key_here
+DD_SITE=datadoghq.com  # or datadoghq.eu for EU
+DD_SERVICE=api_starter
+DD_ENV=production  # dev, staging, or production
+DD_TRACE_ENABLED=true
+```
+
+4. **Start with monitoring**:
+```bash
+# Start all services including Datadog agent
+docker-compose --profile monitoring up
+```
+
+### What's Monitored
+
+- **APM Traces**: Automatic tracing of all API requests, database queries, and external HTTP calls
+- **Custom Metrics**: Background job completion/failure rates with tags (actor, queue, namespace)
+- **Logs**: Application logs with automatic trace correlation
+- **Infrastructure**: Container metrics, process monitoring, and resource usage
+- **Health Status**: Database, Redis, and worker health monitoring
+
+All metrics and traces are viewable in your Datadog dashboard with zero additional configuration.
+
 ## Deployment
 
 ### Production Deployment
@@ -205,8 +243,9 @@ This template follows modern software architecture patterns:
 1. **Environment Configuration**: Set production environment variables
 2. **Database**: Configure production MongoDB instance
 3. **Redis**: Set up Redis instance for background tasks
-4. **Workers**: Deploy background workers separately or as containers
-5. **API**: Deploy FastAPI application with production ASGI server
+4. **Datadog**: Configure DD_API_KEY and monitoring settings
+5. **Workers**: Deploy background workers separately or as containers
+6. **API**: Deploy FastAPI application with production ASGI server
 
 ### Container Deployment
 
@@ -215,6 +254,7 @@ The project supports containerized deployment with separate containers for:
 - Dramatiq background workers
 - Redis message broker
 - MongoDB database
+- Datadog agent (optional, for monitoring)
 
 ## Contributing
 

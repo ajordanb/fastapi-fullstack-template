@@ -69,6 +69,16 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379"
     dramatiq_broker_url: str = "redis://localhost:6379"
     dramatiq_namespace: str = "your_backend_app"
+    cors_origins: str = "http://localhost:3000,http://localhost:5173"  # Comma-separated origins
+    db_max_pool_size: int = 10
+    db_min_pool_size: int = 1
+    # Datadog Configuration
+    dd_service: str = "api_starter"  # Datadog service name
+    dd_env: str = "dev"  # Datadog environment (dev/staging/prod)
+    dd_agent_host: str = "localhost"  # Datadog agent host
+    dd_trace_enabled: bool = True  # Enable Datadog APM tracing
+    dd_logs_injection: bool = True  # Enable log correlation
+    dd_profiling_enabled: bool = False  # Enable Datadog profiling
 
     class Config:
         env_file = '.env'
@@ -93,6 +103,32 @@ class Settings(BaseSettings):
     def main_app_description(self) -> str:
         return f"""{self.app_name} stater project 🤯"""
 
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Returns CORS origins as a list"""
+        return [origin.strip() for origin in self.cors_origins.split(',') if origin.strip()]
+
+    def validate_production_secrets(self) -> None:
+        """Validate that production secrets have been changed from defaults"""
+        if self.mode == Mode.prod:
+            dangerous_defaults = []
+            if self.secret_key == "change_me":
+                dangerous_defaults.append("secret_key")
+            if self.authjwt_refresh_key == "change_me":
+                dangerous_defaults.append("authjwt_refresh_key")
+            if self.master_psk == "change_me":
+                dangerous_defaults.append("master_psk")
+            if self.user_default_password == "change_me":
+                dangerous_defaults.append("user_default_password")
+
+            if dangerous_defaults:
+                raise ValueError(
+                    f"SECURITY ERROR: Production mode detected but the following secrets are using default values: "
+                    f"{', '.join(dangerous_defaults)}. Please set proper values in environment variables."
+                )
+
 
 settings = Settings()
+# Validate secrets on startup
+settings.validate_production_secrets()
 

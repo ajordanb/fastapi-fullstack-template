@@ -90,7 +90,10 @@ class User(Document, UserAuth):
         name = "User"
         indexes = [
             IndexModel("email", unique=True),
-            IndexModel("api_keys")
+            IndexModel("api_keys.client_id"),  # More specific index for API key lookups
+            IndexModel([("source", 1), ("email_confirmed", 1)]),  # Compound index for filtering
+            IndexModel("roles"),  # Index for role-based queries
+            IndexModel("is_active"),  # Index for filtering active users
         ]
 
     def __repr__(self) -> str:
