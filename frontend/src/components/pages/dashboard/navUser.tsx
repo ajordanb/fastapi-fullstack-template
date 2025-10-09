@@ -31,6 +31,7 @@ import {
 import ModeToggle from "../../modeToggle.tsx"
 import type {User} from "@/api/user/model.tsx"
 import {useAuth} from "@/hooks/useAuth.tsx"
+import {useNavigate} from "@tanstack/react-router"
 
 export function NavUser({
                             user,
@@ -39,6 +40,7 @@ export function NavUser({
 }) {
     const {isMobile} = useSidebar()
     const {logout} = useAuth()
+    const navigate = useNavigate()
     const formatName = (name?: string) => {
         if (!name) return "";
 
@@ -94,7 +96,7 @@ export function NavUser({
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator/>
                         <DropdownMenuGroup>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate({ to: '/account' })}>
                                 <BadgeCheck/>
                                 Account
                             </DropdownMenuItem>

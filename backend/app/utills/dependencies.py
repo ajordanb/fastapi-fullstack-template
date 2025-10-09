@@ -51,14 +51,17 @@ def valid_access_token(token: str = Depends(reusable_oauth),
 
 
 def validate_refresh_token(req: RefreshTokenReq,
+                           security_service: SecurityService = Depends(get_security_service)
                            ) -> Token:
-    return valid_token(req.refreshToken)
+    return security_service.validate_access_token(req.refreshToken)
 
 
-def validate_link_token(token: str) -> Token:
+def validate_link_token(token: str,
+                        security_service: SecurityService = Depends(get_security_service)
+                        ) -> Token:
     if token.startswith("Bearer "):
         token = token[7:]
-    return valid_token(token)
+    return security_service.validate_access_token(token)
 
 
 async def current_user(

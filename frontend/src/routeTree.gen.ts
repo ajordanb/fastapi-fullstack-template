@@ -22,6 +22,7 @@ import { Route as RegisterImport } from './routes/register'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
+import { Route as AuthenticatedAccountImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedManagerReportsImport } from './routes/_authenticated/manager/reports'
 import { Route as AuthenticatedManagerLayoutImport } from './routes/_authenticated/manager/_layout'
 import { Route as AuthenticatedAdminUsersImport } from './routes/_authenticated/admin/users'
@@ -98,6 +99,12 @@ const AuthenticatedManagerRoute = AuthenticatedManagerImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+
+const AuthenticatedAccountRoute = AuthenticatedAccountImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 
@@ -205,6 +212,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ValidateMagicLinkImport
       parentRoute: typeof rootRoute
     }
+    '/_authenticated/account': {
+      id: '/_authenticated/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AuthenticatedAccountImport
+      parentRoute: typeof AuthenticatedImport
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -297,11 +311,13 @@ const AuthenticatedManagerRouteWithChildren =
   AuthenticatedManagerRoute._addFileChildren(AuthenticatedManagerRouteChildren)
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedManagerRoute: typeof AuthenticatedManagerRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedManagerRoute: AuthenticatedManagerRouteWithChildren,
 }
@@ -320,6 +336,7 @@ export interface FileRoutesByFullPath {
   '/sso': typeof SsoRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/validateMagicLink': typeof ValidateMagicLinkRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminLayoutRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/admin/roles': typeof AuthenticatedAdminRolesRoute
@@ -338,6 +355,7 @@ export interface FileRoutesByTo {
   '/sso': typeof SsoRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/validateMagicLink': typeof ValidateMagicLinkRoute
+  '/account': typeof AuthenticatedAccountRoute
   '/admin': typeof AuthenticatedAdminLayoutRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRoute
   '/admin/roles': typeof AuthenticatedAdminRolesRoute
@@ -357,6 +375,7 @@ export interface FileRoutesById {
   '/sso': typeof SsoRoute
   '/unauthorized': typeof UnauthorizedRoute
   '/validateMagicLink': typeof ValidateMagicLinkRoute
+  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/admin/_layout': typeof AuthenticatedAdminLayoutRoute
   '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRoute
@@ -379,6 +398,7 @@ export interface FileRouteTypes {
     | '/sso'
     | '/unauthorized'
     | '/validateMagicLink'
+    | '/account'
     | '/admin'
     | '/admin/jobs'
     | '/admin/roles'
@@ -396,6 +416,7 @@ export interface FileRouteTypes {
     | '/sso'
     | '/unauthorized'
     | '/validateMagicLink'
+    | '/account'
     | '/admin'
     | '/admin/jobs'
     | '/admin/roles'
@@ -413,6 +434,7 @@ export interface FileRouteTypes {
     | '/sso'
     | '/unauthorized'
     | '/validateMagicLink'
+    | '/_authenticated/account'
     | '/_authenticated/admin'
     | '/_authenticated/admin/_layout'
     | '/_authenticated/admin/jobs'
@@ -475,6 +497,7 @@ export const routeTree = rootRoute
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
+        "/_authenticated/account",
         "/_authenticated/admin",
         "/_authenticated/manager"
       ]
@@ -499,6 +522,10 @@ export const routeTree = rootRoute
     },
     "/validateMagicLink": {
       "filePath": "validateMagicLink.tsx"
+    },
+    "/_authenticated/account": {
+      "filePath": "_authenticated/account.tsx",
+      "parent": "/_authenticated"
     },
     "/_authenticated/admin": {
       "filePath": "_authenticated/admin",
